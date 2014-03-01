@@ -14,7 +14,7 @@ An API, tasty like a pizza (?)
     $ pip install -r req.txt
     $ deactivate
 
-### Running
+### Setup & run
 
 #### Key.API
 
