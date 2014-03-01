@@ -6,9 +6,9 @@ from bson.objectid import ObjectId
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
 
+@csrf_exempt
 @HttpOptionsDecorator
 @VoolksAPIAuthRequired
-@csrf_exempt
 def classes(request, class_name):
 
     response = {}
@@ -20,7 +20,7 @@ def classes(request, class_name):
     # Create 
 
     if len(request.POST.items()) > 0:
-
+        
         data = request.POST.items()[0][0]
         parsed_data = json.loads(data)
         parsed_data['createdAt'] = str(datetime.now())
