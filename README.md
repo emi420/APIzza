@@ -6,7 +6,9 @@ An API, tasty like a pizza (?)
 ## Installation
 
 1.Clone this project on your system
+
 2.Install virtualenv and pip in your system.
+
 3.Install pip requeriments on each project virtualenv:
 
     $ cd <project folder> 
