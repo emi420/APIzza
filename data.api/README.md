@@ -1,4 +1,4 @@
 # Data API
 
-Key.API manages data objetcs.
+Data.API manages data objetcs.
 
