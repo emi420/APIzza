@@ -14,9 +14,9 @@ An API, tasty like a pizza (?)
     $ pip install -r req.txt
     $ deactivate
 
-### Setup & run
+## Setup & run
 
-#### Key.API
+### Key.API
 
 1.Open the key.api folder
 
@@ -40,7 +40,7 @@ Now you can add an app from the admin (http://localhost:7999/admin/) and then ru
 
 For testing the API.
 
-#### Auth.API
+### Auth.API
 
 1.Open the auth.api folder
 
@@ -64,7 +64,7 @@ Now you can add an user from the admin (http://localhost:8000/admin/") and the r
 
 For testing the API.
 
-#### Data.API
+### Data.API
 
 1.Install Mongo DB 
 
