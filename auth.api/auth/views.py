@@ -37,6 +37,7 @@ def login(request):
 
          response['sessionId'] = session_id
          response['username'] = user.username
+         response['id'] = user.pk
 
          return HttpResponse(json.dumps(response), content_type="application/json")
 
