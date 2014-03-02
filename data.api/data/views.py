@@ -43,11 +43,15 @@ def classes(request, class_name):
             if request.META["REQUEST_METHOD"] == "DELETE":
                 instance.remove(json.loads(request.GET["where"]))
                 delete = True
-            elif request.GET["count"] == "True":
+            elif "count" in request.GET and request.GET["count"] == "True":
                 cur = instance.find(json.loads(request.GET["where"]).count())
             else:
             # Where
-                cur = instance.find(json.loads(request.GET["where"]))
+                try:
+                    cur = instance.find(json.loads(request.GET["where"]))
+                except:
+                    # FIXME CHECK
+                    cur = instance.find(json.loads('{' + request.GET["where"] + '}'))
             
         else:
             # Get all
