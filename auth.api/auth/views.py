@@ -32,6 +32,7 @@ def login(request):
 
          s = SessionStore()
          s['ip_address'] = request.META['REMOTE_ADDR'] 
+         s['id'] = user.pk
          s.save()
          session_id = s.session_key
 
@@ -57,11 +58,12 @@ def validate_session(request):
    session_id = request.GET.get('sessionId','')
    s = SessionStore(session_key=session_id)
    
+
    if 'ip_address' in s and s['ip_address'] == request.META['REMOTE_ADDR'] :
-       response['text'] = "True"
+       
+       response['userid'] = s['id']
        response['code'] = 1
    else:
-       response['text'] = "False"
        response['code'] = 0
        
    return HttpResponse(json.dumps(response), content_type="application/json")
