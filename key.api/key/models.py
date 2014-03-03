@@ -12,7 +12,7 @@ class App(models.Model):
         return self.nombre
 
     class Meta:
-        verbose_name = 'Aplicación'
-        verbose_name_plural = 'Aplicaciones'
+        verbose_name = 'Application'
+        verbose_name_plural = 'Applications'
 
 
