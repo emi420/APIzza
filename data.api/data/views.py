@@ -16,7 +16,13 @@ def classes(request, class_name):
     database_name = "test"
     connection = Connection()
     db = connection[database_name]
-    instance = db[class_name]
+    
+    app = request.META.get('HTTP_X_VOOLKS_APP_ID')
+    if not app:
+        app = request.GET.get('VoolksAppId','')
+    
+    instance = db[app + "-" + class_name]
+    
     delete = False
     
     
@@ -24,14 +30,7 @@ def classes(request, class_name):
         
         # Create 
         data = request.POST.items()[0][0]
-        
-        # FIXME CHECK
-        #try:
         parsed_data = json.loads(data)
-        #except:
-        #    import pdb; pdb.set_trace();
-        #    parsed_data = json.loads("{" + data + "}")
-
         parsed_data['createdAt'] = str(datetime.now())
         obj = instance.insert(parsed_data)
         response['id'] = str(obj)
@@ -90,7 +89,13 @@ def classes_get_one(request, class_name, obj_id):
     database_name = "test"
     connection = Connection()
     db = connection[database_name]
-    instance = db[class_name]
+
+    app = request.META.get('HTTP_X_VOOLKS_APP_ID')
+    if not app:
+        app = request.GET.get('VoolksAppId','')
+    
+    instance = db[app + "-" + class_name]
+
     parsed_data = {}
     
     if obj_id and obj_id is not "":
