@@ -115,7 +115,6 @@ def validate_session(sessionid, app, key):
     return json.loads(res.text)
 
 def check_mod(obj, action, sessionid, app, key):
-    
     parsed_data = {}
     data = obj
     for k in data:
@@ -129,8 +128,8 @@ def check_mod(obj, action, sessionid, app, key):
                     try:
                         if mod[str(session['userid'])] != action and mod[str(session['userid'])] != "*":
                             return False
-                    except:
-                            return False
+                    #except:
+                    #        return False
     return True
 
 @csrf_exempt
