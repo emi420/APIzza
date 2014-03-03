@@ -34,7 +34,7 @@ def signup(request):
          s.save()
          session_id = s.session_key
 
-         response['sessionId'] = session_id
+         response['sessionid'] = session_id
          response['username'] = user.username
          response['id'] = user.pk
 
@@ -79,7 +79,7 @@ def login(request):
          s.save()
          session_id = s.session_key
 
-         response['sessionId'] = session_id
+         response['sessionid'] = session_id
          response['username'] = user.username
          response['id'] = user.pk
 
@@ -98,13 +98,13 @@ def validate_session(request):
     
    response = {}
    
-   session_id = request.GET.get('sessionId','')
+   session_id = request.GET.get('sessionid','')
    s = SessionStore(session_key=session_id)
    
 
-   if 'ip_address' in s and s['ip_address'] == request.META['REMOTE_ADDR'] :
+   if 'ip_address' in s: # and s['ip_address'] == request.META['REMOTE_ADDR'] :
        
-       response['userid'] = s['id']
+       response['userid'] = str(s['id'])
        response['code'] = 1
    else:
        response['code'] = 0
