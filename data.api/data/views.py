@@ -126,7 +126,7 @@ def check_mod(obj, action, sessionid, app, key):
                     return False
                 else:
                     try:
-                        if mod[str(session['userid'])] != action:
+                        if mod[str(session['userid'])] != action and mod[str(session['userid'])] != "*":
                             return False
                     except:
                             return False
@@ -173,7 +173,6 @@ def classes_get_one(request, class_name, obj_id):
                 parsed_data = json.loads(data)
                 parsed_data['updatedAt'] = str(datetime.now())
                 obj = instance.update({'_id':ObjectId(obj_id)}, parsed_data)
-                parsed_data = obj
 
 
         else:
@@ -182,8 +181,6 @@ def classes_get_one(request, class_name, obj_id):
             if check_mod(obj, "read", sessionid, app, key):
                 parsed_data = obj
                 
-        del obj['_id']
-
         return HttpResponse(json.dumps(parsed_data) + "\n", content_type="application/json")
         
     else:
