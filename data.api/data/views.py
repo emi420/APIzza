@@ -132,7 +132,6 @@ def check_mod(obj, action, sessionid, app, key):
                             return False
                     except:
                         return False
-
     return True
 
 @csrf_exempt
