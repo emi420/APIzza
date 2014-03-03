@@ -179,6 +179,7 @@ def classes_get_one(request, class_name, obj_id):
         # Get by id
         
             if check_mod(obj, "read", sessionid, app, key):
+                del obj["_id"]
                 parsed_data = obj
                 
         return HttpResponse(json.dumps(parsed_data) + "\n", content_type="application/json")
