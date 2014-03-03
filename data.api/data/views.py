@@ -110,7 +110,7 @@ def classes(request, class_name):
 def validate_session(sessionid, app, key):
     import requests
  
-    res = requests.get(USER_SESSION_URL + 'validate_session/?sessionId=' + sessionid, headers={'X-Voolks-App-Id': app, 'X-Voolks-Api-Key': key},verify=False)
+    res = requests.get(USER_SESSION_URL + 'validate_session/?sessionid=' + sessionid, headers={'X-Voolks-App-Id': app, 'X-Voolks-Api-Key': key},verify=False)
     
     return json.loads(res.text)
 
@@ -122,14 +122,17 @@ def check_mod(obj, action, sessionid, app, key):
             if k == "_mod":
                 mod = data[k]
                 session = validate_session(sessionid, app, key)
+                
                 if not "userid" in session:
                     return False
+
                 else:
                     try:
                         if mod[str(session['userid'])] != action and mod[str(session['userid'])] != "*":
                             return False
-                    #except:
-                    #        return False
+                    except:
+                        return False
+
     return True
 
 @csrf_exempt

@@ -98,11 +98,11 @@ def validate_session(request):
     
    response = {}
    
-   session_id = request.GET.get('sessionId','')
+   session_id = request.GET.get('sessionid','')
    s = SessionStore(session_key=session_id)
    
-
-   if 'ip_address' in s and s['ip_address'] == request.META['REMOTE_ADDR'] :
+   # FIXME CHECK
+   if 'ip_address' in s: # and s['ip_address'] == request.META['REMOTE_ADDR'] :
        
        response['userid'] = s['id']
        response['code'] = 1
