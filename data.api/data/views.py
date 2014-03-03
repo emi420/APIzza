@@ -78,7 +78,7 @@ def classes(request, class_name):
             
         response['result'] = result
     
-    return HttpResponse(json.dumps(response), content_type="application/json")
+    return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
 
 @csrf_exempt
 @HttpOptionsDecorator
@@ -102,8 +102,10 @@ def classes_get_one(request, class_name, obj_id):
 
         # Get by id
         obj = instance.find_one({'_id': ObjectId(obj_id)})
-        obj['id'] = obj_id
-        del obj['_id']
+        if obj:
+            obj['id'] = obj_id
+            parsed_data = obj
+            del obj['_id']
 
         # Delete
         if request.META["REQUEST_METHOD"] == "DELETE":
@@ -117,7 +119,7 @@ def classes_get_one(request, class_name, obj_id):
             obj = instance.update({'_id':ObjectId(obj_id)}, parsed_data)
             parsed_data['id'] = obj_id
 
-        return HttpResponse(json.dumps(parsed_data), content_type="application/json")
+        return HttpResponse(json.dumps(parsed_data) + "\n", content_type="application/json")
         
     else:
         return HttpResponse(json.dumps({}), content_type="application/json")
