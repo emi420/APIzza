@@ -5,6 +5,49 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.contrib.sessions.backends.db import SessionStore
 
+def signup(request):
+    
+   response = {}
+
+   username = request.GET.get('username','')
+   password = request.GET.get('password','')
+            
+   if username == '':
+      response['code'] = 44
+      response['text'] = "Username not provided"
+      return HttpResponse(json.dumps(response), content_type="application/json")
+
+   elif password == '':
+      response['code'] = 45
+      response['text'] = "Password not provided"
+      return HttpResponse(json.dumps(response), content_type="application/json")
+
+   else:
+      
+     user = User.objects.create_user(username, username, password)
+     
+     if user is not None:
+
+         s = SessionStore()
+         s['ip_address'] = request.META['REMOTE_ADDR'] 
+         s['id'] = user.pk
+         s.save()
+         session_id = s.session_key
+
+         response['sessionId'] = session_id
+         response['username'] = user.username
+         response['id'] = user.pk
+
+         return HttpResponse(json.dumps(response), content_type="application/json")
+
+     else:
+
+         response['code'] = 46
+         response['text'] = "Invalid Username or password"
+         return HttpResponse(json.dumps(response), content_type="application/json")
+
+
+
 @HttpOptionsDecorator
 @VoolksAPIAuthRequired
 def login(request):

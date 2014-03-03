@@ -139,6 +139,7 @@ def classes_get_one(request, class_name, obj_id):
                     if k.find("_") != 0:
                         parsed_data[k] = data[k]
                     else:
+                        # Move this code to a 'check_mod' method
                         if k == "_mod":
                             mod = data[k]
                             sessionid = request.GET.get("sessionid", "")
