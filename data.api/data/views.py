@@ -156,7 +156,7 @@ def classes_get_one(request, class_name, obj_id):
     instance = db[app + "-" + class_name]
 
     parsed_data = {}
-    
+        
     if obj_id and obj_id is not "":
 
         obj = instance.find_one({'_id': ObjectId(obj_id)})
@@ -178,7 +178,6 @@ def classes_get_one(request, class_name, obj_id):
 
         else:
         # Get by id
-        
             if check_mod(obj, "read", sessionid, app, key):
                 del obj["_id"]
                 parsed_data = obj
