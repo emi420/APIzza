@@ -6,7 +6,8 @@ from bson.objectid import ObjectId
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
 
-USER_SESSION_URL = "http://localhost:8000/users/"
+#USER_SESSION_URL = "http://localhost:8000/users/"
+USER_SESSION_URL = "http://auth.voolks.com/users/"
 
 @csrf_exempt
 @HttpOptionsDecorator
@@ -155,7 +156,7 @@ def classes_get_one(request, class_name, obj_id):
     instance = db[app + "-" + class_name]
 
     parsed_data = {}
-    
+        
     if obj_id and obj_id is not "":
 
         obj = instance.find_one({'_id': ObjectId(obj_id)})
@@ -177,7 +178,6 @@ def classes_get_one(request, class_name, obj_id):
 
         else:
         # Get by id
-        
             if check_mod(obj, "read", sessionid, app, key):
                 del obj["_id"]
                 parsed_data = obj
