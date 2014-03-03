@@ -3,7 +3,7 @@ import requests
 from django.http import HttpResponse
 from django.contrib.auth import authenticate
 
-KEYS_API_URL = "http://localhost:7999/"
+KEYS_API_URL = "http://key.voolks.com/"
 
 def set_access_control_headers(response):
     response['Access-Control-Allow-Origin'] = '*'

@@ -6,3 +6,4 @@ local_settings.py
 **/.DS_Store
 **/ENV/
 **/*.sqlite3
+**/**/*.sqlite3
