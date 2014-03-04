@@ -79,24 +79,14 @@ Usando el método DELETE:
 
 Usando el id de usuario, que podemos obtener en el login:
 
-	curl 'http://data.voolks.com/classes/note/' -X POST -d '{\"note":"My secret note", "_mod": \{"2":"*"\}\}'" 
+	curl 'http://data.voolks.com/classes/note/' -X POST -d '{\"note":"My secret note", "_mod": \{"2":"write"\}\}'" 
 
 Usando el parámetro especial *_mod* indicamos el id de usuario y los permisos.
 
 Ejemplos:
 
-(actual, va a deprecar)
-
-* _mod: {"2", "*"} (recomendado)
-* _mod: {"2", "read"}
-* _mod: {"2", "update"}
-* _mod: {"2", "delete"}
-* _mod: {"editor_group", "*"} (no disponible todavía)
-* _mod: {"2", "read,update"} (no disponible todavía)
-
-(nueva version, para hacer)
-
-* _mod: {"2": {"read": true, "write": true}, "*": {"read":true}} 
+* _mod: {"2", "read"} *Solo lectura*
+* _mod: {"2", "write"} *Esctitura y lectura*
 
 ### Obtener 
 

@@ -17,12 +17,12 @@ def signup(request):
    if username == '':
       response['code'] = 54
       response['text'] = "Username not provided"
-      return HttpResponse(json.dumps(response), content_type="application/json")
+      return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
 
    elif password == '':
       response['code'] = 55
       response['text'] = "Password not provided"
-      return HttpResponse(json.dumps(response), content_type="application/json")
+      return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
 
    else:
 
@@ -46,7 +46,7 @@ def signup(request):
          response['username'] = user.username
          response['id'] = user.pk
 
-         return HttpResponse(json.dumps(response), content_type="application/json")
+         return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
 
      else:
 
@@ -54,7 +54,7 @@ def signup(request):
          
          response['code'] = 56
          response['text'] = "Can't create user"
-         return HttpResponse(json.dumps(response), content_type="application/json")
+         return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
 
 
 
@@ -72,12 +72,12 @@ def login(request):
    if username == '':
       response['code'] = 44
       response['text'] = "Username not provided"
-      return HttpResponse(json.dumps(response), content_type="application/json")
+      return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
 
    elif password == '':
       response['code'] = 45
       response['text'] = "Password not provided"
-      return HttpResponse(json.dumps(response), content_type="application/json")
+      return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
 
    else:
       
@@ -101,7 +101,7 @@ def login(request):
          response['username'] = user.username
          response['id'] = user.pk
 
-         return HttpResponse(json.dumps(response), content_type="application/json")
+         return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
 
      else:
 
@@ -109,7 +109,7 @@ def login(request):
          
          response['code'] = 46
          response['text'] = "Invalid username or password"
-         return HttpResponse(json.dumps(response), content_type="application/json")
+         return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
 
 
 @HttpOptionsDecorator
@@ -128,7 +128,7 @@ def validate_session(request):
    else:
        response['code'] = 0
        
-   return HttpResponse(json.dumps(response), content_type="application/json")
+   return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
    
    
   

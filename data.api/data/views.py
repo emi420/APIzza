@@ -32,7 +32,6 @@ def classes(request, class_name):
 
     response = {}
     sessionid = request.GET.get("sessionid", "")
-    delete = False
     (app, key) = get_api_credentials(request)
     connection = Connection()
     db = connection[DATABASE_NAME]    
@@ -65,35 +64,21 @@ def classes(request, class_name):
         # Make query for permissions
         
         if not sessionid:
-            if request_delete:
-
-                query["$or"] = [
-                    {"_mod":{"$exists": False}},
-                    {"_mod":{"*":"*"}}, 
-                    {"_mod":{"*":"write"}}
-                ]
-        
-            else:
-
-                query["$or"] = [
-                    {"_mod":{"$exists": False}},
-                    {"_mod":{"*":"*"}}, 
-                    {"_mod":{"*":"read"}}
-                ]
+            query["$or"] = [
+                {"_mod":{"$exists": False}},
+            ]
         else:
 
             session = validate_session(sessionid, app, key)
-
-            if "userid" in session:
+            if not "userid" in session:
+                return HttpResponse(json.dumps({"error":"Invalid session","code":"53"}) + "\n", content_type="application/json")
+            else:
                 userid = str(session['userid'])
 
             if request_delete:
 
                 query["$or"] = [
                     {"_mod":{"$exists": False}},
-                    {"_mod":{"*":"*"}}, 
-                    {"_mod":{"*":"write"}}, 
-                    {"_mod":{userid:"*"}}, 
                     {"_mod":{userid:"write"}}
                 ]
                 
@@ -101,9 +86,8 @@ def classes(request, class_name):
 
                 query["$or"] = [
                     {"_mod":{"$exists": False}},
-                    {"_mod":{"*":"*"}}, 
-                    {"_mod":{"*":"read"}}, 
-                    {"_mod":{userid:"read"}}
+                    {"_mod":{userid:"read"}},
+                    {"_mod":{userid:"write"}}
                 ]
                 
                                 
@@ -147,7 +131,8 @@ def validate_session(sessionid, app, key):
 
     import requests
     res = requests.get(USER_SESSION_URL + 'validate_session/?sessionid=' + sessionid, headers={'X-Voolks-App-Id': app, 'X-Voolks-Api-Key': key},verify=False)    
-    return json.loads(res.text)
+    response = json.loads(res.text)
+    return response
 
 
 
@@ -179,37 +164,22 @@ def classes_get_one(request, class_name, obj_id):
         
         if not sessionid:
 
-            if request_delete or request_put:
-
-                query["$or"] = [
-                    {"_mod":{"$exists": False}},
-                    {"_mod":{"*":"*"}}, 
-                    {"_mod":{"*":"write"}}
-                ]
-            
-            else:
-
-                query["$or"] = [
-                    {"_mod":{"$exists": False}},
-                    {"_mod":{"*":"*"}}, 
-                    {"_mod":{"*":"read"}}
-                ]
+            query["$or"] = [
+                {"_mod":{"$exists": False}},
+            ]
 
         else:
 
             session = validate_session(sessionid, app, key)
-
-            if "userid" in session:
+            if not "userid" in session:
+                return HttpResponse(json.dumps({"error":"Invalid session","code":"53"}) + "\n", content_type="application/json")
+            else:
                 userid = str(session['userid'])
-
 
             if request_delete or request_put:
 
                 query["$or"] = [
                     {"_mod":{"$exists": False}},
-                    {"_mod":{"*":"*"}}, 
-                    {"_mod":{"*":"write"}}, 
-                    {"_mod":{userid:"*"}}, 
                     {"_mod":{userid:"write"}}
                 ]
                 
@@ -217,9 +187,8 @@ def classes_get_one(request, class_name, obj_id):
 
                 query["$or"] = [
                     {"_mod":{"$exists": False}},
-                    {"_mod":{"*":"*"}}, 
-                    {"_mod":{"*":"read"}}, 
-                    {"_mod":{userid:"read"}}
+                    {"_mod":{userid:"read"}},
+                    {"_mod":{userid:"write"}}
                 ]
 
         # Delete
@@ -256,7 +225,7 @@ def classes_get_one(request, class_name, obj_id):
         return HttpResponse(json.dumps(parsed_data) + "\n", content_type="application/json")
         
     else:
-        return HttpResponse(json.dumps({}), content_type="application/json")
+        return HttpResponse(json.dumps({}) + "\n", content_type="application/json")
         
     
     
