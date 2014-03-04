@@ -21,6 +21,7 @@ def get_api_credentials(request):
         key = request.GET.get('VoolksApiKey','')
     
     return (app, key)
+    
 
 @csrf_exempt
 @HttpOptionsDecorator
@@ -37,12 +38,12 @@ def classes(request, class_name):
     db = connection[DATABASE_NAME]    
     instance = db[app + "-" + class_name]
     cur = None
-    cur2 = None
     count = 0
-    count2 = 0
     result = []
+    request_delete = request.META["REQUEST_METHOD"] == "DELETE"
+    request_post = request.META["REQUEST_METHOD"] == "POST"
     
-    if request.META["REQUEST_METHOD"] == "POST":
+    if request_post:
         
         # Create 
         
@@ -53,64 +54,87 @@ def classes(request, class_name):
         response['id'] = str(obj)
         
     else:
-        
-        # Delete
-        
-        if request.META["REQUEST_METHOD"] == "DELETE":
-            delete = True
 
         # Get data
 
         if "where" in request.GET:
-            where = json.loads(request.GET["where"])
+            query = json.loads(request.GET["where"])
         else:
-            where = {}
+            query = {}
 
-        where["_mod"] = {"$exists": False}
-        if not delete:
-            cur = instance.find(where)
+        # Make query for permissions
+        
+        if not sessionid:
+            if request_delete:
+
+                query["$or"] = [
+                    {"_mod":{"$exists": False}},
+                    {"_mod":{"*":"*"}}, 
+                    {"_mod":{"*":"write"}}
+                ]
+        
+            else:
+
+                query["$or"] = [
+                    {"_mod":{"$exists": False}},
+                    {"_mod":{"*":"*"}}, 
+                    {"_mod":{"*":"read"}}
+                ]
         else:
-            instance.remove(where)
 
-        if sessionid:
             session = validate_session(sessionid, app, key)
 
             if "userid" in session:
                 userid = str(session['userid'])
-                where = {}
-                where["_mod"] = {userid:"*"}
-                if not delete:
-                    cur2 = instance.find(where)
-                else:
-                    instance.remove(where)
+
+            if request_delete:
+
+                query["$or"] = [
+                    {"_mod":{"$exists": False}},
+                    {"_mod":{"*":"*"}}, 
+                    {"_mod":{"*":"write"}}, 
+                    {"_mod":{userid:"*"}}, 
+                    {"_mod":{userid:"write"}}
+                ]
+                
+            else:
+
+                query["$or"] = [
+                    {"_mod":{"$exists": False}},
+                    {"_mod":{"*":"*"}}, 
+                    {"_mod":{"*":"read"}}, 
+                    {"_mod":{userid:"read"}}
+                ]
+                
+                                
+        # Get
+        
+        if not request_delete:
+            cur = instance.find(query)
+
+        # Delete
+
+        else:
+            instance.remove(query)
                 
         # Count
         
         if cur:
             count = cur.count()
+            if "count" in request.GET and request.GET["count"] == "true":
+                result = {}
+                result["count"] = count
+            else:
 
-        if cur2:
-            count2 = cur2.count()
+                if not request_delete:
 
-        # Response
+                    # Response
 
-        if delete is not True:
-
-            for i in range(0, count):
-                obj = cur.next()
-                obj['id'] = str(obj['_id'])
-                del obj['_id']
-                result.append(obj)
-
-            for i in range(0, count2):
-                obj = cur2.next()
-                obj['id'] = str(obj['_id'])
-                del obj['_id']
-                result.append(obj)
-            
-    if "count" in request.GET and request.GET["count"] == "true":
-        result = {}
-        result["count"] = count + count2
+                    for i in range(0, count):
+                        obj = cur.next()
+                        obj['id'] = str(obj['_id'])
+                        del obj['_id']
+                        result.append(obj)
 
     if len(result) > 0:
         response['result'] = result
@@ -135,23 +159,41 @@ def classes_get_one(request, class_name, obj_id):
 
     response = {}
     parsed_data = {}
-    delete = False
     sessionid = request.GET.get("sessionid", "")
     (app, key) = get_api_credentials(request)
     connection = Connection()
     db = connection[DATABASE_NAME]
     instance = db[app + "-" + class_name]
     obj = None
+    userid = None
+    request_delete = request.META["REQUEST_METHOD"] == "DELETE"
+    request_put = request.META["REQUEST_METHOD"] == "PUT"
+    
 
     if obj_id and obj_id is not "":
 
-        # Get one item by id
+        query = {}
+        query["_id"] = ObjectId(obj_id)
 
-        where = {}
-        where["_id"] = ObjectId(obj_id)
-
+        # Make query for permissions
+        
         if not sessionid:
-            where["_mod"] = {"$exists": False}
+
+            if request_delete or request_put:
+
+                query["$or"] = [
+                    {"_mod":{"$exists": False}},
+                    {"_mod":{"*":"*"}}, 
+                    {"_mod":{"*":"write"}}
+                ]
+            
+            else:
+
+                query["$or"] = [
+                    {"_mod":{"$exists": False}},
+                    {"_mod":{"*":"*"}}, 
+                    {"_mod":{"*":"read"}}
+                ]
 
         else:
 
@@ -159,32 +201,52 @@ def classes_get_one(request, class_name, obj_id):
 
             if "userid" in session:
                 userid = str(session['userid'])
-                where["_mod"] = {userid:"*"}
+
+
+            if request_delete or request_put:
+
+                query["$or"] = [
+                    {"_mod":{"$exists": False}},
+                    {"_mod":{"*":"*"}}, 
+                    {"_mod":{"*":"write"}}, 
+                    {"_mod":{userid:"*"}}, 
+                    {"_mod":{userid:"write"}}
+                ]
+                
+            else:
+
+                query["$or"] = [
+                    {"_mod":{"$exists": False}},
+                    {"_mod":{"*":"*"}}, 
+                    {"_mod":{"*":"read"}}, 
+                    {"_mod":{userid:"read"}}
+                ]
 
         # Delete
 
-        if request.META["REQUEST_METHOD"] == "DELETE":
-            instance.remove(where, True)
+        if request_delete:
+            instance.remove(query, True)
         
         # Get 
 
         else:
-            obj = instance.find_one(where)
-
+            obj = instance.find_one(query)
 
         if obj:
             obj['id'] = obj_id
 
             # Update
 
-            if request.META["REQUEST_METHOD"] == "PUT":
+            if request_put:
                 data = request.read()
                 parsed_data = json.loads(data)
                 parsed_data['updatedAt'] = str(datetime.now())
-                instance.update(where, parsed_data)
-                obj = instance.find_one(where)
+                instance.update(query, parsed_data)
+                obj = instance.find_one(query)
 
 
+            # Response
+            
             del obj["_id"]
             parsed_data = obj
 
