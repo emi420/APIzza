@@ -8,36 +8,43 @@ from datetime import datetime
 
 USER_SESSION_URL = "http://localhost:8000/users/"
 #USER_SESSION_URL = "http://auth.voolks.com/users/"
+DATABASE_NAME = "test"
+
+def get_api_credentials(request):
+    ''' Get app id and api key '''
+
+    app = request.META.get('HTTP_X_VOOLKS_APP_ID')
+    if not app:
+        app = request.GET.get('VoolksAppId','')
+    key = request.META.get('HTTP_X_VOOLKS_API_KEY')
+    if not key:
+        key = request.GET.get('VoolksApiKey','')
+    
+    return (app, key)
 
 @csrf_exempt
 @HttpOptionsDecorator
 @VoolksAPIAuthRequired
 def classes(request, class_name):
+    ''' Get, Delete, Count or Update multiple items'''
+    ''' Create a single item '''
 
     response = {}
-    database_name = "test"
-    connection = Connection()
-    db = connection[database_name]
-    
     sessionid = request.GET.get("sessionid", "")
-
-    app = request.META.get('HTTP_X_VOOLKS_APP_ID')
-    if not app:
-        app = request.GET.get('VoolksAppId','')
-
-
-    key = request.META.get('HTTP_X_VOOLKS_API_KEY')
-    if not key:
-        key = request.GET.get('VoolksApiKey','')
-            
-    instance = db[app + "-" + class_name]
-    
     delete = False
-    
+    (app, key) = get_api_credentials(request)
+    connection = Connection()
+    db = connection[DATABASE_NAME]    
+    instance = db[app + "-" + class_name]
+    cur = None
+    cur2 = None
+    count = 0
+    count2 = 0
     
     if request.META["REQUEST_METHOD"] == "POST":
         
         # Create 
+        
         data = request.POST.items()[0][0]
         parsed_data = json.loads(data)
         parsed_data['createdAt'] = str(datetime.now())
@@ -46,142 +53,172 @@ def classes(request, class_name):
         
     else:
         
+        # Delete
+        
+        if request.META["REQUEST_METHOD"] == "DELETE":
+            delete = True
+
+        # Get data
+
         if "where" in request.GET:
-            # Delete
-            if request.META["REQUEST_METHOD"] == "DELETE":
-                objs = json.loads(request.GET["where"])
-                for o in objs:
-                    if check_mod(o, "delete", sessionid, app, key):
-                        instance.remove(o)
-                delete = True
-            
-            # Count
-            elif "count" in request.GET and request.GET["count"] == "True":
-                cur = instance.find(json.loads(request.GET["where"]).count())
-            
-            else:
-            # Where
-                try:
-                    cur = instance.find(json.loads(request.GET["where"]))
-                except:
-                    # FIXME CHECK
-                    cur = instance.find(json.loads('{' + request.GET["where"] + '}'))
-            
+            where = json.loads(request.GET["where"])
         else:
-            # Delete
-            if request.META["REQUEST_METHOD"] == "DELETE":
-                objs = instance.find()
-                for o in objs:
-                    if check_mod(o, "delete", sessionid, app, key):
-                        instance.remove(o)
+            where = {}
+
+        where["_mod"] = {"$exists": False}
+        if not delete:
+            cur = instance.find(where)
+        else:
+            instance.remove(where)
+
+        if sessionid:
+            session = validate_session(sessionid, app, key)
+
+            if "userid" in session:
+                userid = str(session['userid'])
+                where = {}
+                where["_mod"] = {userid:"*"}
+                if not delete:
+                    cur2 = instance.find(where)
+                else:
+                    instance.remove(where)
                 
-                delete = True
-
-            # Count
-            elif "count" in request.GET and request.GET["count"] == "true":
-                cur = instance.find().count()
-            
-            # Get all
-            else:
-                cur = instance.find()
-
-        
-        result = []
-        
         # Count
-        if "count" in request.GET and request.GET["count"] == "true":
-            result = {}
-            result["count"] = cur
+        
+        if cur:
+            count = cur.count()
 
-        else:
-            if delete is not True:
-                for i in range(0, cur.count()):
-                    obj = cur.next()
-                    obj['id'] = str(obj['_id'])
-                    del obj['_id']
-                    if check_mod(obj, "read", sessionid, app, key):
-                        result.append(obj)
+        if cur2:
+            count2 = cur2.count()
+
+        # Response
+
+        result = []
+        if delete is not True:
+
+            for i in range(0, count):
+                obj = cur.next()
+                obj['id'] = str(obj['_id'])
+                del obj['_id']
+                result.append(obj)
+
+            for i in range(0, count2):
+                obj = cur2.next()
+                obj['id'] = str(obj['_id'])
+                del obj['_id']
+                result.append(obj)
             
-        response['result'] = result
+    if "count" in request.GET and request.GET["count"] == "true":
+        result = {}
+        result["count"] = count + count2
+
+    response['result'] = result
     
     return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
 
 
 def validate_session(sessionid, app, key):
+    ''' Check if user session is valid using an external API (auth.api)'''
+
     import requests
- 
-    res = requests.get(USER_SESSION_URL + 'validate_session/?sessionid=' + sessionid, headers={'X-Voolks-App-Id': app, 'X-Voolks-Api-Key': key},verify=False)
-    
+    res = requests.get(USER_SESSION_URL + 'validate_session/?sessionid=' + sessionid, headers={'X-Voolks-App-Id': app, 'X-Voolks-Api-Key': key},verify=False)    
     return json.loads(res.text)
 
-def check_mod(obj, action, sessionid, app, key):
-    parsed_data = {}
-    data = obj
-    for k in data:
-        if k.find("_") == 0:
-            if k == "_mod":
-                mod = data[k]
-                session = validate_session(sessionid, app, key)
-                
-                if not "userid" in session:
-                    return False
 
-                else:
-                    try:
-                        if mod[str(session['userid'])] != action and mod[str(session['userid'])] != "*":
-                            return False
-                    except:
-                        return False
-    return True
+def check_mod(obj, action, sessionid, app, key):
+    ''' Check permissions '''
+
+    has_perm = True
+    parsed_data = {}
+    
+    if "_mod" in obj:
+
+        mod = obj["_mod"]
+
+        # Check if session id is valid
+        
+        session = validate_session(sessionid, app, key)
+        if not "userid" in session:
+            has_perm = False
+        else:
+            try:
+                if mod[str(session['userid'])] != action and mod[str(session['userid'])] != "*":
+                    has_perm = False
+            except:
+                has_perm = False
+
+    return has_perm
+
 
 @csrf_exempt
 @HttpOptionsDecorator
 @VoolksAPIAuthRequired
 def classes_get_one(request, class_name, obj_id):
-    
+    ''' Get, Delete or Update one item'''
+
     response = {}
-    database_name = "test"
-    connection = Connection()
-    db = connection[database_name]
+    parsed_data = {}
     sessionid = request.GET.get("sessionid", "")
+    connection = Connection()
+    db = connection[DATABASE_NAME]
 
-    app = request.META.get('HTTP_X_VOOLKS_APP_ID')
-    if not app:
-        app = request.GET.get('VoolksAppId','')
-
-
-    key = request.META.get('HTTP_X_VOOLKS_API_KEY')
-    if not key:
-        key = request.GET.get('VoolksApiKey','')
+    (app, key) = get_api_credentials(request)
     
     instance = db[app + "-" + class_name]
 
-    parsed_data = {}
-        
     if obj_id and obj_id is not "":
 
-        obj = instance.find_one({'_id': ObjectId(obj_id)})
-        obj['id'] = obj_id
+        # Get one item by id
 
-        # Delete
-        if request.META["REQUEST_METHOD"] == "DELETE":
-            if check_mod(obj, "delete", sessionid, app, key):
-                instance.remove({'_id': ObjectId(obj_id)})
+        where = {}
+        where["_id"] = ObjectId(obj_id)
 
-        # Update
-        elif request.META["REQUEST_METHOD"] == "PUT":
-            if check_mod(obj, "update", sessionid, app, key):
-                data = request.read()
-                parsed_data = json.loads(data)
-                parsed_data['updatedAt'] = str(datetime.now())
-                obj = instance.update({'_id':ObjectId(obj_id)}, parsed_data)
-
+        if not sessionid:
+            where["_mod"] = {"$exists": False}
 
         else:
-        # Get by id
-            if check_mod(obj, "read", sessionid, app, key):
-                del obj["_id"]
-                parsed_data = obj
+
+            session = validate_session(sessionid, app, key)
+
+            if "userid" in session:
+                userid = str(session['userid'])
+                where["_mod"] = {userid:"*"}
+
+        obj = instance.find_one(where)
+
+        if obj:
+            obj['id'] = obj_id
+
+            # Delete
+
+            if request.META["REQUEST_METHOD"] == "DELETE":
+                if check_mod(obj, "delete", sessionid, app, key):
+                    instance.remove({'_id':ObjectId(obj_id)})
+
+            # Update
+
+            elif request.META["REQUEST_METHOD"] == "PUT":
+                if check_mod(obj, "update", sessionid, app, key):
+                    data = request.read()
+                    parsed_data = json.loads(data)
+                    parsed_data['updatedAt'] = str(datetime.now())
+                    
+                    instance.update({'_id':ObjectId(obj_id)}, parsed_data)
+                    obj = instance.find_one({'_id':ObjectId(obj_id)})
+                    
+                    del obj["_id"]
+                    parsed_data = obj
+
+
+            else:
+
+            # Read
+
+                if check_mod(obj, "read", sessionid, app, key):
+                    del obj["_id"]
+                    parsed_data = obj
+        else:
+            parsed_data = {}
                 
         return HttpResponse(json.dumps(parsed_data) + "\n", content_type="application/json")
         

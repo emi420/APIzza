@@ -4,8 +4,6 @@ import settings
 
 admin.autodiscover()
 
-# Wire up our API using automatic URL routing.
-# Additionally, we include login URLs for the browseable API.
 urlpatterns = patterns('',
     url(r'^static/(.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_URL}),
     url(r'^users/login/$', 'auth.views.login'),
