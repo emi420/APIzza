@@ -161,12 +161,10 @@ def classes_get_one(request, class_name, obj_id):
                 userid = str(session['userid'])
                 where["_mod"] = {userid:"*"}
 
-        # Delete
-        if request.META["REQUEST_METHOD"] == "DELETE":
-            delete = True
-            
-        if not delete:
+        # Get 
+        if request.META["REQUEST_METHOD"] != "DELETE":
             obj = instance.find_one(where)
+        # Delete
         else:
             instance.remove(where, True)
 
