@@ -40,6 +40,7 @@ def classes(request, class_name):
     cur2 = None
     count = 0
     count2 = 0
+    result = []
     
     if request.META["REQUEST_METHOD"] == "POST":
         
@@ -93,7 +94,6 @@ def classes(request, class_name):
 
         # Response
 
-        result = []
         if delete is not True:
 
             for i in range(0, count):
@@ -112,7 +112,8 @@ def classes(request, class_name):
         result = {}
         result["count"] = count + count2
 
-    response['result'] = result
+    if len(result) > 0:
+        response['result'] = result
     
     return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
 
@@ -125,30 +126,6 @@ def validate_session(sessionid, app, key):
     return json.loads(res.text)
 
 
-def check_mod(obj, action, sessionid, app, key):
-    ''' Check permissions '''
-
-    has_perm = True
-    parsed_data = {}
-    
-    if "_mod" in obj:
-
-        mod = obj["_mod"]
-
-        # Check if session id is valid
-        
-        session = validate_session(sessionid, app, key)
-        if not "userid" in session:
-            has_perm = False
-        else:
-            try:
-                if mod[str(session['userid'])] != action and mod[str(session['userid'])] != "*":
-                    has_perm = False
-            except:
-                has_perm = False
-
-    return has_perm
-
 
 @csrf_exempt
 @HttpOptionsDecorator
@@ -158,13 +135,13 @@ def classes_get_one(request, class_name, obj_id):
 
     response = {}
     parsed_data = {}
+    delete = False
     sessionid = request.GET.get("sessionid", "")
+    (app, key) = get_api_credentials(request)
     connection = Connection()
     db = connection[DATABASE_NAME]
-
-    (app, key) = get_api_credentials(request)
-    
     instance = db[app + "-" + class_name]
+    obj = None
 
     if obj_id and obj_id is not "":
 
@@ -184,39 +161,32 @@ def classes_get_one(request, class_name, obj_id):
                 userid = str(session['userid'])
                 where["_mod"] = {userid:"*"}
 
-        obj = instance.find_one(where)
+        # Delete
+        if request.META["REQUEST_METHOD"] == "DELETE":
+            delete = True
+            
+        if not delete:
+            obj = instance.find_one(where)
+        else:
+            instance.remove(where, True)
+
 
         if obj:
             obj['id'] = obj_id
 
-            # Delete
-
-            if request.META["REQUEST_METHOD"] == "DELETE":
-                if check_mod(obj, "delete", sessionid, app, key):
-                    instance.remove({'_id':ObjectId(obj_id)})
-
             # Update
 
-            elif request.META["REQUEST_METHOD"] == "PUT":
-                if check_mod(obj, "update", sessionid, app, key):
-                    data = request.read()
-                    parsed_data = json.loads(data)
-                    parsed_data['updatedAt'] = str(datetime.now())
-                    
-                    instance.update({'_id':ObjectId(obj_id)}, parsed_data)
-                    obj = instance.find_one({'_id':ObjectId(obj_id)})
-                    
-                    del obj["_id"]
-                    parsed_data = obj
+            if request.META["REQUEST_METHOD"] == "PUT":
+                data = request.read()
+                parsed_data = json.loads(data)
+                parsed_data['updatedAt'] = str(datetime.now())
+                instance.update(where, parsed_data)
+                obj = instance.find_one(where)
 
 
-            else:
+            del obj["_id"]
+            parsed_data = obj
 
-            # Read
-
-                if check_mod(obj, "read", sessionid, app, key):
-                    del obj["_id"]
-                    parsed_data = obj
         else:
             parsed_data = {}
                 
