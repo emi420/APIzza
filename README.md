@@ -90,11 +90,11 @@ http://docs.mongodb.org/manual/installation/
 
 Now you can test it, creating a product:
 
-    $ curl -X POST -H "X-Voolks-App-Id:1" -H "X-Voolks-Api-Key: 1234" -d '{"title": "Red mate"}' http://localhost:8001/classes/product
+    $ curl -X POST -H "X-Voolks-App-Id:1" -H "X-Voolks-Api-Key: 1234" -d '{"title": "Red mate"}' http://localhost:8001/classes/product/
 
 And retrieving it:
 
-    $ curl "X-Voolks-App-Id:1" -H "X-Voolks-Api-Key: 1234" http://localhost:8001/classes/product/53120df93c4588417a49d562
+    $ curl "X-Voolks-App-Id:1" -H "X-Voolks-Api-Key: 1234" http://localhost:8001/classes/product/53120df93c4588417a49d562/
 
 ## License
 
