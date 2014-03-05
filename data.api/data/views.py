@@ -27,7 +27,7 @@ def classes(request, class_name):
     ''' Create a single item '''
 
     response = {}
-    sessionid = request.GET.get("sessionid", "")
+    sessionid = request.META.get('HTTP_X_VOOLKS_SESSION_ID')
     (app, key) = get_api_credentials(request)
     connection = Connection()
     db = connection[DATABASE_NAME]    
@@ -126,7 +126,7 @@ def validate_session(sessionid, app, key):
     ''' Check if user session is valid using an external API (auth.api)'''
 
     import requests
-    res = requests.get(USER_SESSION_URL + 'validate_session/?sessionid=' + sessionid, headers={'X-Voolks-App-Id': app, 'X-Voolks-Api-Key': key},verify=False)    
+    res = requests.get(USER_SESSION_URL + 'validate/' + sessionid + '/', headers={'X-Voolks-App-Id': app, 'X-Voolks-Api-Key': key},verify=False)    
     response = json.loads(res.text)
     return response
 
@@ -140,7 +140,7 @@ def classes_get_one(request, class_name, obj_id):
 
     response = {}
     parsed_data = {}
-    sessionid = request.GET.get("sessionid", "")
+    sessionid = request.META.get('HTTP_X_VOOLKS_SESSION_ID')
     (app, key) = get_api_credentials(request)
     connection = Connection()
     db = connection[DATABASE_NAME]

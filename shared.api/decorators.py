@@ -13,7 +13,7 @@ def set_access_control_headers(response):
     response['Access-Control-Allow-Origin'] = '*'
     response['Access-Control-Allow-Methods'] = 'PUT, DELETE, POST, GET, OPTIONS'
     response['Access-Control-Max-Age'] = 1000
-    response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept, x-voolks-api-key, x-voolks-app-id'
+    response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept, x-voolks-api-key, x-voolks-app-id, x-voolks-session-id'
 
 class HttpOptionsDecorator(object):
 

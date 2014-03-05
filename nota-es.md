@@ -92,4 +92,4 @@ Ejemplos:
 
 Usando el sessionid que nos da el login podemos hacer cualquier tipo de consulta incluyendo a los objetos para los cuales tengamos permisos.
 
-    curl 'http://data.voolks.com/classes/product/?sessionid=823u4oewhruehwfrewrioher'
+    curl 'http://data.voolks.com/classes/product/ -H "X-Voolks-Session-Id: 2xak6pr6n3mfsiqaks4lxtckpnxsy30"'

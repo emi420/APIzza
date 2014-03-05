@@ -114,11 +114,10 @@ def login(request):
 
 @HttpOptionsDecorator
 @VoolksAPIAuthRequired
-def validate_session(request):
+def validate_session(request, session_id):
    ''' Check if user session if valid '''
 
    response = {}
-   session_id = request.GET.get('sessionid','')
    s = SessionStore(session_key=session_id)
    
    # FIXME CHECK
