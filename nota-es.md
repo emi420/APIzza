@@ -11,7 +11,7 @@ Todas las consultas deben llevar los headers X-Voolks-App-Id y X-Voolks-Api-Key 
 
 Pueden administrarse las aplicaciones desde el admin:
 
-http://auth.voolks.com/admin/
+http://key.voolks.com/admin/
 
 ## Datos (data.api)
 
