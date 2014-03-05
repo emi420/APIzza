@@ -7,7 +7,7 @@
 
 ### Id de aplicación y API key
 
-Todas las consultas deben llevar los headers X-Voolks-App-Id y X-Voolks-Api-Key con el id de aplicación y una key para usar la API, provista por el administrador. En vez de headers también pueden pasarse estos valores usando variables GET en la URL (VoolksAppId y VoolksApiKey).
+Todas las consultas deben llevar los headers X-Voolks-App-Id y X-Voolks-Api-Key con el id de aplicación y una key para usar la API, provista por el administrador.
 
 Pueden administrarse las aplicaciones desde el admin:
 

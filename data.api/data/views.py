@@ -14,11 +14,7 @@ def get_api_credentials(request):
     ''' Get app id and api key '''
 
     app = request.META.get('HTTP_X_VOOLKS_APP_ID')
-    if not app:
-        app = request.GET.get('VoolksAppId','')
     key = request.META.get('HTTP_X_VOOLKS_API_KEY')
-    if not key:
-        key = request.GET.get('VoolksApiKey','')
     
     return (app, key)
     

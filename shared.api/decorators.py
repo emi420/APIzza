@@ -6,7 +6,6 @@ from django.contrib.auth import authenticate
 #KEYS_API_URL = "http://key.voolks.com/"
 KEYS_API_URL = "http://localhost:7999/"
 
-
 ''' Headers access-control '''
 
 def set_access_control_headers(response):
@@ -14,7 +13,7 @@ def set_access_control_headers(response):
     response['Access-Control-Allow-Origin'] = '*'
     response['Access-Control-Allow-Methods'] = 'PUT, DELETE, POST, GET, OPTIONS'
     response['Access-Control-Max-Age'] = 1000
-    response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept'
+    response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept, x-voolks-api-key, x-voolks-app-id'
 
 class HttpOptionsDecorator(object):
 
@@ -36,9 +35,6 @@ def VoolksAPIAuthRequired(function):
 
         key = request.META.get('HTTP_X_VOOLKS_API_KEY')
         app = request.META.get('HTTP_X_VOOLKS_APP_ID')
-        if not key or not app:
-            key = request.GET.get('VoolksApiKey','')
-            app = request.GET.get('VoolksAppId','')
             
         # Call external API (key.api)
         r = requests.get(KEYS_API_URL + 'check_key/', headers={'X-Voolks-App-Id': app, 'X-Voolks-Api-Key': key},verify=False)
