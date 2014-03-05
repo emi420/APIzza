@@ -3,7 +3,6 @@ import requests
 from django.http import HttpResponse
 from django.contrib.auth import authenticate
 
-#KEYS_API_URL = "http://key.voolks.com/"
 KEYS_API_URL = "http://localhost:7999/"
 
 ''' Headers access-control '''
