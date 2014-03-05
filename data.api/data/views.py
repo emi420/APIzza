@@ -31,12 +31,14 @@ def classes(request, class_name):
     connection = Connection()
     db = connection[DATABASE_NAME]    
     instance = db[app + "-" + class_name]
+    limit = 0
     cur = None
     count = 0
     result = []
     request_delete = request.META["REQUEST_METHOD"] == "DELETE"
     request_post = request.META["REQUEST_METHOD"] == "POST"
-    
+    queryIsList = False
+
     if request_post:
         
         # Create 
@@ -53,6 +55,14 @@ def classes(request, class_name):
 
         if "where" in request.GET:
             query = json.loads(request.GET["where"])
+            if type(query) is dict:
+                cur = instance.find(query)
+            elif type(query) is list:
+                cur = instance.find(query[0],query[1]) 
+                query1 = query[1]
+                query = query[0]
+                queryIsList = True      
+
         else:
             query = {}
 
@@ -89,7 +99,17 @@ def classes(request, class_name):
         # Get
         
         if not request_delete:
-            cur = instance.find(query)
+            if not "limit" in request.GET:
+                if not queryIsList:
+                    cur = instance.find(query)
+                else:
+                    cur = instance.find(query,query1)
+            else:
+               limit = int(request.GET.get("limit"))
+               if not queryIsList:
+                    cur = instance.find(query).limit(limit)
+               else:
+                    cur = instance.find(query,query1).limit(limit)
 
         # Delete
 
@@ -100,6 +120,8 @@ def classes(request, class_name):
         
         if cur:
             count = cur.count()
+            if limit and count > limit:
+                count = limit
             if "count" in request.GET and request.GET["count"] == "true":
                 result = {}
                 result["count"] = count

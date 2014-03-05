@@ -9,5 +9,6 @@ router = routers.DefaultRouter()
 urlpatterns = patterns('',
     url(r'^', include(router.urls)),
     url(r'^check_key/$', 'key.views.check_key'),
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^key/admin/', include(admin.site.urls)),
+    url(r'^admin/', include(admin.site.urls))
 )

@@ -65,7 +65,7 @@ STATIC_ROOT = '/var/www/key.voolks.com/key/static'
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
-STATIC_URL = '/static/'
+STATIC_URL = '/key/static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (

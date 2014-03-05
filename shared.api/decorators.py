@@ -1,7 +1,6 @@
 import json
 import requests
 from django.http import HttpResponse
-from django.contrib.auth import authenticate
 
 KEYS_API_URL = "http://localhost:7999/"
 
@@ -34,14 +33,21 @@ def VoolksAPIAuthRequired(function):
 
         key = request.META.get('HTTP_X_VOOLKS_API_KEY')
         app = request.META.get('HTTP_X_VOOLKS_APP_ID')
-            
+
+        if not key:
+            try:
+                key = request.GET.get('VoolksApiKey')
+                app = request.GET.get('VoolksAppId')
+            except(e):
+                pass
+
         # Call external API (key.api)
         r = requests.get(KEYS_API_URL + 'check_key/', headers={'X-Voolks-App-Id': app, 'X-Voolks-Api-Key': key},verify=False)
 
         if not app or not key or r.status_code != 200:
         # If error. return response
             response = {}
-            response['code'] = 666
+            response['code'] = r.status_code
             response['text'] = "Voolks API authtentication failed"
             return HttpResponse(json.dumps(response), content_type="application/json")
         else:
