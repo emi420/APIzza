@@ -75,8 +75,7 @@ def create(request):
         else:
             dest.write(file.read())
         dest.close()
-        return HttpResponse("OK")
-        
+        return HttpResponseRedirect("/" + file.name + "?VoolksAppId=" + app + "&VoolksApiKey=" + key) 
 
 @csrf_exempt
 @HttpOptionsDecorator
