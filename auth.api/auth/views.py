@@ -5,6 +5,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.contrib.sessions.backends.db import SessionStore
 
+@HttpOptionsDecorator
+@VoolksAPIAuthRequired
 def signup(request):
    ''' Register user '''
 

@@ -6,7 +6,7 @@ from bson.objectid import ObjectId
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
 
-USER_SESSION_URL = "http://localhost:8000/users/"
+USER_SESSION_URL = "http://localhost:8000/"
 DATABASE_NAME = "test"
 
 def get_api_credentials(request):
