@@ -1,95 +1,438 @@
-# Voölks API
+# Documentación
 
- _Powered by APIzza httpss://github.com/emi420/APIzza_ 
+## ID de aplicación y API Key
 
- La API de Voölks consiste de una serie de webservices para ser reutilizados por las distintas aplicaciones que desarrollamos.
+Todas las consultas se hacen al dominio en el cual tengas instalada la API:
 
+https://api.example.com/
 
-### Id de aplicación y API key
+Enviando una API Key (clave para usar la API) y un App Id (id de aplicación para usar la API)..
 
-Todas las consultas deben llevar los headers X-Voolks-App-Id y X-Voolks-Api-Key con el id de aplicación y una key para usar la API, provista por el administrador.
+Se pueden enviar por GET como parámetros en la URL (VoolksApiKey, VoolksAppId) o en los headers HTTP X-Voolks-Api-Key, X-Voolks-App-Id
 
-Pueden administrarse las aplicaciones desde el admin:
+## Datos
 
-https://dev.voolks.com/admin/
+### API de datos
 
-## Datos (data.api)
+https://api.example.com/classes/
 
-** https://dev.voolks.com **
+### Crear objetos
 
-Para trabajar con los objetos hay que usar el nombre de clase al que pertenece:
+### Request
 
-* https://dev.voolks.com/classes/product/
-* https://dev.voolks.com/classes/contact/
-* ...
+Se envía un request POST con un objeto JSON que contiene la lista de llaves y valores a:
 
-### Crear
+/classes/<clase del objeto>/
 
-Usando el método POST:
+### JavaScript
 
-    $ curl https://dev.voolks.com/classes/product/ -X POST -d '{"title": "1kg de naranjas", "price": 4.5}' -H "X-Voolks-App-Id: 1" -H "X-Voolks-Api-Key: 1234"
+$.ajax({
+    url: "https://api.example.com/classes/Client/",
+    headers: {
+             "X-Voolks-Api-Key":<Api-Key>,
+             "X-Voolks-App-Id":<App-Id>
+    },                                        
+    type: "POST",
+    data: JSON.stringify({
+            "name": "Juan Perez",
+            "city": "Buenos Aires"
+    }),
+    success: function(r) {
+                console.log(r);
+            }
+});
 
-Al crear el objeto, la API devuelve un id único que lo identifica.
+### Respuesta
 
-### Obtener
+La respuesta es un objeto JSON con el timestamp de creación y el id del objeto creado.
 
-Puede usarse su id:
+## Obtener objetos
 
-    curl 'https://dev.voolks.com/classes/product/531503e9820c491ec8c272f7/'
+### Request
 
-U obtener todos:
+Se envía un request GET a:
 
-    curl 'https://dev.voolks.com/classes/product/' 
-      
-### Actualizar
+/classes/<clase del objeto>/<id del objeto>
 
-Mediante el método PUT:
+### JavaScript
 
-    curl 'https://dev.voolks.com/classes/product/' -X PUT -d '{"title": "1kg de naranjas", "price": 5.25}'
+$.ajax({
+    url: "https://api.example.com/classes/Client/53b566cafd625c5955d73b07/",
+    headers: {
+             "X-Voolks-Api-Key":<Api-Key>,
+             "X-Voolks-App-Id":<App-Id>
+    },                                        
+    type: "GET",
+    success: function(r) {
+                console.log(r);
+            }
+});
 
-### Filtrar
+### Respuesta
 
-Usando el filtro where, que acepta los comandos de MongoDB ($gt, $lt, $regex, etc)
-	
-	curl 'https://dev.voolks.com/classes/product/?where=\{"price":\{"$gt":3.5\}\}'
+La respuesta es el objeto en formato JSON.
 
-### Borrar
+## Actualizar objetos
 
-Usando el método DELETE:
+### Request
 
-    curl 'https://dev.voolks.com/classes/product/' -X DELETE 
+Se envía un request PUT a:
 
+/classes/<clase del objeto>/<id del objeto>/
 
-## Usuarios (auth.api)
+Con un objeto JSON que reemplazará al anterior.
 
-** https://dev.voolks.com **
-    
-### Registrar
+### JavaScript
 
-	curl 'https://dev.voolks.com/users/signup/?username=test&password=12345'
+$.ajax({
+    url: "https://api.example.com/classes/Client/53b566cafd625c5955d73b07/",
+    headers: {
+             "X-Voolks-Api-Key":<Api-Key>,
+             "X-Voolks-App-Id":<App-Id>
+    },                                        
+    type: "PUT",
+    data: JSON.stringify({
+            "name": "Juan Perez",
+            "city": "Córdoba"
+    }),
+    success: function(r) {
+                console.log(r);
+            }
+});
 
-### Autenticar
+### Respuesta
 
-	curl 'https://dev.voolks.com/users/login/?username=test&password=12345'
+La respuesta es un objeto JSON con el timestamp de actualización (updatedAt)
 
+## Borrar objetos
 
-## Datos con permisos
+### Request
 
-### Guardar un objeto con permisos sólo para un usuario
+Se envía un request DELETE a:
 
-Usando el id de usuario, que podemos obtener en el login:
+/classes/<clase del objeto>/<id del objeto>/
 
-	curl 'https://dev.voolks.com/classes/note/' -X POST -d '{\"note":"My secret note", "_mod": \{"2":"write"\}\}'" 
+### JavaScript
 
-Usando el parámetro especial *_mod* indicamos el id de usuario y los permisos.
+$.ajax({
+    url: "https://api.example.com/classes/Client/53b566cafd625c5955d73b07/",
+    headers: {
+             "X-Voolks-Api-Key":<Api-Key>,
+             "X-Voolks-App-Id":<App-Id>
+    },                                        
+    type: "DELETE"
+});
+
+Obtener todos los objetos de una clase
+
+### Request
+
+Para obtener todos los objetos de una clase, se envía un request GET a:
+
+/classes/<clase del objeto>/
+
+### JavaScript
+
+$.ajax({
+    url: "https://api.example.com/classes/Client/",
+    headers: {
+             "X-Voolks-Api-Key":<Api-Key>,
+             "X-Voolks-App-Id":<App-Id>
+    },                                        
+    type: "GET",
+    success: function(r) {
+                console.log(r);
+            }
+});
+
+### Respuesta
+
+Un objeto JSON con el array de objetos del resultado.
+
+## Filtrar objetos
+
+### Request
+
+Para realizar consultas con filtros, debe usarse el parámetro where en el request GET:
+
+/classes/<clase del objeto>/
 
 Ejemplos:
 
-* _mod: {"2", "read"} *Solo lectura*
-* _mod: {"2", "write"} *Esctitura y lectura*
+?where={“country”:”Argentina”}
+?where={“customer”:”Starbucks”, “sent”: false}
 
-### Obtener 
+### Respuesta
 
-Usando el sessionid que nos da el login podemos hacer cualquier tipo de consulta incluyendo a los objetos para los cuales tengamos permisos.
+Un objeto JSON con el array de objetos del resultado.
 
-    curl 'https://dev.voolks.com/classes/product/' -H "X-Voolks-Session-Id: 2xak6pr6n3mfsiqaks4lxtckpnxsy30"
+### JavaScript
+
+$.ajax({
+    url: 'https://api.example.com/classes/Client/?where={"name":"Juan Perez"}',
+    headers: {
+            "X-Voolks-Api-Key":<Api-Key>,
+            "X-Voolks-App-Id":<App-Id>
+    },                                      
+    type: "GET",
+    success: function(r) {
+        console.log(r);
+    }
+});
+
+
+## Operaciones
+
+Al pasar el parámetro “where”, los queries son similares a los de MongoDB:
+
+http://docs.mongodb.org/manual/tutorial/query-documents/
+
+## Expresiones regulares
+
+Ejemplo usando una expresión regular para traer todos los registros cuyo campo “name” empiece con “R” :
+### JavaScript
+
+$.ajax({
+    url: 'https://api.example.com/classes/app/?where={"name":{"$regex":"^R(.*)$"}}',
+    headers: {
+            "X-Voolks-Api-Key":<Api-Key>,
+            "X-Voolks-App-Id":<App-Id>
+    },                                      
+    type: "GET",
+    success: function(r) {
+        console.log(r);
+    }
+});
+
+## Projections
+
+Para hacer projections, el parámetro where debe ser un array con la query y los campos a retornar:
+
+### JavaScript
+
+$.ajax({
+    url: 'https://api.example.com/classes/Client/?where=[{"name":"Juan Perez"},{"_id":1}]',
+    headers: {
+            "X-Voolks-Api-Key":<Api-Key>,
+            "X-Voolks-App-Id":<App-Id>
+    },                                      
+    type: "GET",
+    success: function(r) {
+        console.log(r);
+    }
+})
+
+La respuesta será un array de objetos que contienen sólo los campos indicados.
+
+## Limit
+
+Para establecer límites a la consulta, hay que enviar el parámetro “limit” en el GET:
+
+### JavaScript
+
+$.ajax({
+    url: 'https://api.example.com/classes/Client/?limit=1&where=[{"name":"Juan Perez"},{"_id":1}]',
+    headers: {
+            "X-Voolks-Api-Key":<Api-Key>,
+            "X-Voolks-App-Id":<App-Id>
+    },                                      
+    type: "GET",
+    success: function(r) {
+        console.log(r);
+    }
+})
+
+
+
+## Contar resultados
+
+Para contar los resultados de una consulta, se agrega el siguiente parámetro a la URL del request:
+
+count=true
+
+Ejemplo: https://api.example.com/classes/app/?count=true
+
+### Respuesta
+
+La respuesta es un objeto que sólo contiene el número de objetos que coinciden con la consulta.
+
+### JavaScript
+
+$.ajax({
+    url: 'https://api.example.com/classes/Client/?count=true&where=[{"name":"Juan Perez"},{"_id":1}]',
+    headers: {
+            "X-Voolks-Api-Key":<Api-Key>,
+            "X-Voolks-App-Id":<App-Id>
+    },                                      
+    type: "GET",
+    success: function(r) {
+        console.log(r);
+    }
+})
+
+
+## Autenticación
+
+### API de usuarios
+
+https://api.example.com/auth/
+
+Registro de usuarios
+
+Se realiza mediante el envío de un request POST (temporalmente un GET) a /users/signup/. 
+
+### Data
+
+Objeto con username, password 
+
+### JavaScript
+
+$.ajax({
+    url: 'https://api.example.com/users/signup/?username=demo&password=abc321',
+    headers: {
+            "X-Voolks-Api-Key":<Api-Key>,
+            "X-Voolks-App-Id":<App-Id>
+    },                                      
+    type: "GET",
+    success: function(r) {
+        console.log(r);
+    }
+})
+
+### Respuesta
+
+La respuesta HTTP debe contener un status (ej: 201 Created).
+
+El body de la respuesta es un objeto con fecha de creación, id y un token de sesión.
+
+Login de usuarios
+
+### Request
+
+Se envía un request GET con usuario y password a /users/login/
+
+### JavaScript
+
+$.ajax({
+    url: 'https://api.example.com/users/login/?username=demo&password=abc321',
+    headers: {
+            "X-Voolks-Api-Key":<Api-Key>,
+            "X-Voolks-App-Id":<App-Id>
+    },                                      
+    type: "GET",
+    success: function(r) {
+        console.log(r);
+    }
+})
+
+### Respuesta
+
+La respuesta es un objeto con todos los datos disponibles del usuario, menos el password. También incluye un token de sesión.
+
+## Permisos de usuarios
+
+Esta sección de la API hace referencia a un servicio experimental, un prototipo que posiblemente tenga cambios próximamente.
+
+### 1. Obtener un id de usuario
+
+Para restringir el acceso a datos, primero necesitamos un id de usuario, por ejemplo haciendo login:
+
+### JavaScript
+
+$.ajax({
+    url: 'https://api.example.com/users/login/?username=demo&password=abc321',
+    headers: {
+            "X-Voolks-Api-Key":<Api-Key>,
+            "X-Voolks-App-Id":<App-Id>
+    },                                      
+    type: "GET",
+    success: function(r) {
+        console.log(r);
+    }
+})
+
+### 2. Guardar un objeto 
+
+Guardamos el objeto haciendo referencia al id de usuario:
+
+### JavaScript
+
+$.ajax({
+    url: "https://api.example.com/classes/Client/",
+    headers: {
+             "X-Voolks-Api-Key":<Api-Key>,
+             "X-Voolks-App-Id":<App-Id>
+    },                                        
+    type: "POST",
+    data: JSON.stringify({
+            "name": "Juan Perez",
+            "city": "Buenos Aires", 
+            "_mod": {5:"write"}
+    }),
+    success: function(r) {
+                console.log(r);
+            }
+});
+
+La línea clave es:
+
+"_mod": {5:"write"}
+
+En este ejemplo el número 5 es el id de usuario. El permiso puede ser de escritura (write) o sólo lectura (read).
+
+### 3. Obtener objetos 
+
+Ahora no vamos a tener éxito si intentamos obtener este objeto como hacíamos anteriormente:
+
+### JavaScript
+
+$.ajax({
+    url: 'https://api.example.com/classes/Client/53b56b91fd625c5b465dd7d1/',
+    headers: {
+            "X-Voolks-Api-Key":<Api-Key>,
+            "X-Voolks-App-Id":<App-Id>, 
+           
+    },                                      
+    type: "GET",
+    success: function(r) {
+        console.log(r);
+    }
+})
+
+Para lograrlo necesitamos un id de sesión del usuario con permisos sobre ese objeto, que se envía como el header X-Voolks-Session-Id:
+
+### JavaScript
+
+$.ajax({
+    url: 'https://api.example.com/classes/Client/53b56b91fd625c5b465dd7d1/',
+    headers: {
+            "X-Voolks-Api-Key":<Api-Key>,
+            "X-Voolks-App-Id":<App-Id>, 
+            "X-Voolks-Session-Id":"w4s8s4dcjedu9cl4tl1gupdt734a45j2"
+    },                                      
+    type: "GET",
+    success: function(r) {
+        console.log(r);
+    }
+})
+
+Lo mismo sucederá si queremos obtener todos los objetos:
+
+### JavaScript
+
+$.ajax({
+    url: 'https://api.example.com/classes/Client/',
+    headers: {
+            "X-Voolks-Api-Key":<Api-Key>,
+            "X-Voolks-App-Id":<App-Id>, 
+            "X-Voolks-Session-Id":"w4s8s4dcjedu9cl4tl1gupdt734a45j2"
+    },                                      
+    type: "GET",
+    success: function(r) {
+        console.log(r);
+    }
+})
+
+El resto de las operaciones CRUD funcionan de la misma forma, sólo se pueden modificar o eliminar objetos que estén protegidos por un permiso si se envía un session id válido.
+
+
