@@ -37,6 +37,8 @@ def get(request, name):
         fileContent = dest.read()
         dest.close()
         mimeType = mimetypes.guess_type(path)
+        if mimeType == (None,None):
+               mimeType = "text/plain"
         return HttpResponse(fileContent,  content_type=mimeType)
     except:
         return HttpResponse("FILE NOT FOUND")
