@@ -17,6 +17,6 @@ def check_key(request):
     # Get and return App object
 
     app = App.objects.get(id_aplicacion=app,api_key=key)
-    return HttpResponse(json.dumps({"id": app.id}),status=200)
+    return HttpResponse(json.dumps({"domain": app.dominio}),status=200)
 
     

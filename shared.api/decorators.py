@@ -7,8 +7,6 @@ KEYS_API_URL = "http://localhost:7999/"
 ''' Headers access-control '''
 
 def set_access_control_headers(response):
-
-    response['Access-Control-Allow-Origin'] = '*'
     response['Access-Control-Allow-Methods'] = 'PUT, DELETE, POST, GET, OPTIONS'
     response['Access-Control-Max-Age'] = 1000
     response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept, x-voolks-api-key, x-voolks-app-id, x-voolks-session-id'
@@ -19,7 +17,6 @@ class HttpOptionsDecorator(object):
         self.f = f;
 
     def __call__(self, *args):
-        request = args[0]
         response = self.f(*args)
         set_access_control_headers(response)
         return response
@@ -27,9 +24,14 @@ class HttpOptionsDecorator(object):
 
 ''' Decorator '''
 
-def VoolksAPIAuthRequired(function):
+class VoolksAPIAuthRequired(object):
 
-  def wrap(request, *args, **kwargs):
+    def __init__(self, f):
+        self.f = f;
+
+    def __call__(self, *args):
+
+        request = args[0]
 
         key = request.META.get('HTTP_X_VOOLKS_API_KEY')
         app = request.META.get('HTTP_X_VOOLKS_APP_ID')
@@ -46,14 +48,15 @@ def VoolksAPIAuthRequired(function):
 
         if not app or not key or r.status_code != 200:
         # If error. return response
-            response = {}
-            response['code'] = r.status_code
-            response['text'] = "Voolks API authtentication failed"
-            return HttpResponse(json.dumps(response), content_type="application/json")
+            res = {}
+            res['code'] = r.status_code
+            res['text'] = "API authtentication failed"
+            response = HttpResponse(json.dumps(res), content_type="application/json")
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
         else:
             # If auth ok, continue
-            return function(request, *args, **kwargs)
+            response = self.f(*args)
+            response['Access-Control-Allow-Origin'] = json.loads(r.text)['domain']
+            return response
 
-  wrap.__doc__=function.__doc__
-  wrap.__name__=function.__name__
-  return wrap
