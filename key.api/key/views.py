@@ -1,7 +1,7 @@
 import json
 from django.http import HttpResponse
 
-from key.models import App
+from key.models import App, AppPermission
 
 def check_key(request):
     ''' Check if a key is valid '''
@@ -16,14 +16,14 @@ def check_key(request):
 
     # Get and return App object
 
-    app = App.objects.get(id_aplicacion=app,api_key=key)
+    appObj = App.objects.get(id_aplicacion=app,api_key=key)
     
     try:
-        permissionsObj = AppPermissions.objects.get(objid=app)
+        permissionsObj = AppPermission.objects.get(objid=app)
         permissions = permissionsObj.permissions
     except:
         permissions = "PUT, DELETE, POST, GET, OPTIONS"
 
-    return HttpResponse(json.dumps({"domain": app.dominio, "permissions": permissions}),status=200)
+    return HttpResponse(json.dumps({"domain": appObj.dominio, "permissions": permissions}),status=200)
 
     
