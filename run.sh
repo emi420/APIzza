@@ -16,3 +16,9 @@ cd ../data.api ; \
 #source ENV/bin/activate ; \
 python manage.py runserver localhost:8001 
 
+echo Running file.api ... ; \
+cd ../file.api ; \
+
+#source ENV/bin/activate ; \
+python manage.py runserver localhost:80012
+
