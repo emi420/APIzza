@@ -17,6 +17,13 @@ def check_key(request):
     # Get and return App object
 
     app = App.objects.get(id_aplicacion=app,api_key=key)
-    return HttpResponse(json.dumps({"domain": app.dominio}),status=200)
+    
+    try:
+        permissionsObj = AppPermissions.objects.get(objid=app)
+        permissions = permissionsObj.permissions
+    except:
+        permissions = "PUT, DELETE, POST, GET, OPTIONS"
+
+    return HttpResponse(json.dumps({"domain": app.dominio, "permissions": permissions}),status=200)
 
     

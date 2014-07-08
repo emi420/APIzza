@@ -7,7 +7,6 @@ KEYS_API_URL = "http://localhost:7999/"
 ''' Headers access-control '''
 
 def set_access_control_headers(response):
-    response['Access-Control-Allow-Methods'] = 'PUT, DELETE, POST, GET, OPTIONS'
     response['Access-Control-Max-Age'] = 1000
     response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept, x-voolks-api-key, x-voolks-app-id, x-voolks-session-id'
 
@@ -57,6 +56,8 @@ class VoolksAPIAuthRequired(object):
         else:
             # If auth ok, continue
             response = self.f(*args)
-            response['Access-Control-Allow-Origin'] = json.loads(r.text)['domain']
+            responseObj =  json.loads(r.text)
+            response['Access-Control-Allow-Origin'] = responseObj['domain']
+            response['Access-Control-Allow-Methods'] = responseObj['permissions']
             return response
 
