@@ -31,6 +31,7 @@ def classes(request, class_name):
     connection = Connection()
     db = connection[DATABASE_NAME]    
     instance = db[app + "-" + class_name]
+    skip = 0
     limit = 0
     cur = None
     count = 0
@@ -110,17 +111,21 @@ def classes(request, class_name):
         # Get
         
         if not request_delete:
+
+            if "skip" in request.GET:
+                skip = int(request.GET.get("skip"))
+
             if not "limit" in request.GET:
                 if not queryIsList:
-                    cur = instance.find(query).sort(sort_param)
+                    cur = instance.find(query).sort(sort_param).skip(skip)
                 else:
-                    cur = instance.find(query,query1).sort(sort_param)
+                    cur = instance.find(query,query1).sort(sort_param).skip(skip)
             else:
                limit = int(request.GET.get("limit"))
                if not queryIsList:
-                    cur = instance.find(query).sort(sort_param).limit(limit)
+                    cur = instance.find(query).sort(sort_param).skip(skip).limit(limit)
                else:
-                    cur = instance.find(query,query1).sort(sort_param).limit(limit)
+                    cur = instance.find(query,query1).sort(sort_param).skip(skip).limit(limit)
 
         # Delete
 
