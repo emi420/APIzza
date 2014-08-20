@@ -44,7 +44,11 @@ def classes(request, class_name):
         # Create 
         
         data = request.POST.items()[0][0]
-        parsed_data = json.loads(data)
+        if (str(type(data)) == "<type 'str'>") {
+            parsed_data = json.loads(data)
+        } else {
+            parsed_data = data;
+        }
         parsed_data['createdAt'] = str(datetime.now())
         obj = instance.insert(parsed_data)
         response['id'] = str(obj)
@@ -65,6 +69,13 @@ def classes(request, class_name):
 
         else:
             query = {}
+
+        if "sort" in request.GET:
+            sort_param = []
+            for k, v in json.loads(request.GET["sort"]).iteritems():
+                sort_param.insert(0, (k, v))
+        else:
+            sort_param = [("$natural", 1)]
 
         # Make query for permissions
         
@@ -101,15 +112,15 @@ def classes(request, class_name):
         if not request_delete:
             if not "limit" in request.GET:
                 if not queryIsList:
-                    cur = instance.find(query)
+                    cur = instance.find(query).sort(sort_param)
                 else:
-                    cur = instance.find(query,query1)
+                    cur = instance.find(query,query1).sort(sort_param)
             else:
                limit = int(request.GET.get("limit"))
                if not queryIsList:
-                    cur = instance.find(query).limit(limit)
+                    cur = instance.find(query).sort(sort_param).limit(limit)
                else:
-                    cur = instance.find(query,query1).limit(limit)
+                    cur = instance.find(query,query1).sort(sort_param).limit(limit)
 
         # Delete
 
