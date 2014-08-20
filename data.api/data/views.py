@@ -66,6 +66,17 @@ def classes(request, class_name):
         else:
             query = {}
 
+        if "sort" in request.GET:
+            # * http://docs.mongodb.org/manual/reference/method/cursor.sort/
+            # * http://stackoverflow.com/questions/10242149/sorting-with-mongodb-and-python
+            # sort_param = json.loads(request.GET["sort"])
+            sort_param = []
+            for k, v in json.loads(request.GET["sort"]).iteritems():
+                sort_param.insert(0, (k, v))
+        else:
+            # sort_param = {"$natural": 1}
+            sort_param = [("$natural", 1)]
+
         # Make query for permissions
         
         if not sessionid:
@@ -101,15 +112,15 @@ def classes(request, class_name):
         if not request_delete:
             if not "limit" in request.GET:
                 if not queryIsList:
-                    cur = instance.find(query)
+                    cur = instance.find(query).sort(sort_param)
                 else:
-                    cur = instance.find(query,query1)
+                    cur = instance.find(query,query1).sort(sort_param)
             else:
                limit = int(request.GET.get("limit"))
                if not queryIsList:
-                    cur = instance.find(query).limit(limit)
+                    cur = instance.find(query).sort(sort_param).limit(limit)
                else:
-                    cur = instance.find(query,query1).limit(limit)
+                    cur = instance.find(query,query1).sort(sort_param).limit(limit)
 
         # Delete
 
