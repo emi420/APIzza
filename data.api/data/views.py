@@ -44,12 +44,8 @@ def classes(request, class_name):
         
         # Create 
         
-        data = request.POST.items()[0][0]
-        
-        if str(type(data)) == "<type 'str'>":
-            parsed_data = json.loads(data)
-        else:
-            parsed_data = data;
+        data = request.body
+        parsed_data = json.loads(data)
         
         parsed_data['createdAt'] = str(datetime.now())
         obj = instance.insert(parsed_data)
