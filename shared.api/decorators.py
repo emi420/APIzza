@@ -57,7 +57,18 @@ class VoolksAPIAuthRequired(object):
             # If auth ok, continue
             response = self.f(*args)
             responseObj =  json.loads(r.text)
-            response['Access-Control-Allow-Origin'] = responseObj['domain']
-            response['Access-Control-Allow-Methods'] = responseObj['permissions']
-            return response
+            
+            # Check for class data.api class creation permission
+            if request.get_full_path().find("/classes/") >= 0 and request.META["REQUEST_METHOD"] == "POST" and responseObj['permissions'].find("-classCreation") >= 0:
+                res = {}
+                res['code'] = 400
+                res['text'] = "API permission denied"
+                response = HttpResponse(json.dumps(res), content_type="application/json")
+                response['Access-Control-Allow-Origin'] = '*'
+                return response
+
+            else:
+                response['Access-Control-Allow-Origin'] = responseObj['domain']
+                response['Access-Control-Allow-Methods'] = responseObj['permissions']
+                return response
 
