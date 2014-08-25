@@ -44,8 +44,9 @@ def classes(request, class_name):
         
         # Create 
         
-        data = request.POST.items()[0][0]
+        data = request.body
         parsed_data = json.loads(data)
+        
         parsed_data['createdAt'] = str(datetime.now())
         obj = instance.insert(parsed_data)
         response['id'] = str(obj)
@@ -68,14 +69,10 @@ def classes(request, class_name):
             query = {}
 
         if "sort" in request.GET:
-            # * http://docs.mongodb.org/manual/reference/method/cursor.sort/
-            # * http://stackoverflow.com/questions/10242149/sorting-with-mongodb-and-python
-            # sort_param = json.loads(request.GET["sort"])
             sort_param = []
             for k, v in json.loads(request.GET["sort"]).iteritems():
                 sort_param.insert(0, (k, v))
         else:
-            # sort_param = {"$natural": 1}
             sort_param = [("$natural", 1)]
 
         # Make query for permissions

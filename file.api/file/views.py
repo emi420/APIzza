@@ -97,7 +97,7 @@ def createBase64(request):
         path = settings.MEDIA_ROOT + app + "-" + key + "-" + filename + ".jpg"
         dest = open(path, 'w+')
         
-        dest.write(request.POST[fileKey].decode('base64'))
+        dest.write(request.POST[fileKey][:22].decode('base64'))
         dest.close()
         return HttpResponse("OK")
 
