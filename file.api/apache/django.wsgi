@@ -2,7 +2,7 @@ import os
 import sys
 import site
 
-site.addsitedir('/var/www/file.voolks.com/ENV/lib/python2.7/site-packages')
+site.addsitedir('/var/www/APIzza/ENV/lib/python2.7/site-packages')
 sys.path.append('/var/www/file.voolks.com')
 sys.path.append('/var/www/file.voolks.com/file')
 
