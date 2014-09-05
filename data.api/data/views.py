@@ -24,13 +24,14 @@ def get_api_credentials(request):
 def classes(request, class_name):
     ''' Get, Delete, Count or Update multiple items'''
     ''' Create a single item '''
-
+    
     response = {}
     sessionid = request.META.get('HTTP_X_VOOLKS_SESSION_ID')
     (app, key) = get_api_credentials(request)
     connection = Connection()
     db = connection[DATABASE_NAME]    
     instance = db[app + "-" + class_name]
+    skip = 0
     limit = 0
     cur = None
     count = 0
@@ -43,11 +44,17 @@ def classes(request, class_name):
         
         # Create 
         
-        data = request.POST.items()[0][0]
-        parsed_data = json.loads(data)
+        data = request.body
+        
+        try:
+            parsed_data = json.loads(data)
+        except(e):
+            return HttpResponse(json.dumps({"error":"Invalid JSON","code":"533"}) + "\n", content_type="application/json")
+
         parsed_data['createdAt'] = str(datetime.now())
         obj = instance.insert(parsed_data)
         response['id'] = str(obj)
+        
         
     else:
 
@@ -65,6 +72,13 @@ def classes(request, class_name):
 
         else:
             query = {}
+
+        if "sort" in request.GET:
+            sort_param = []
+            for k, v in json.loads(request.GET["sort"]).iteritems():
+                sort_param.insert(0, (k, v))
+        else:
+            sort_param = [("$natural", 1)]
 
         # Make query for permissions
         
@@ -99,17 +113,21 @@ def classes(request, class_name):
         # Get
         
         if not request_delete:
+
+            if "skip" in request.GET:
+                skip = int(request.GET.get("skip"))
+
             if not "limit" in request.GET:
                 if not queryIsList:
-                    cur = instance.find(query)
+                    cur = instance.find(query).sort(sort_param).skip(skip)
                 else:
-                    cur = instance.find(query,query1)
+                    cur = instance.find(query,query1).sort(sort_param).skip(skip)
             else:
                limit = int(request.GET.get("limit"))
                if not queryIsList:
-                    cur = instance.find(query).limit(limit)
+                    cur = instance.find(query).sort(sort_param).skip(skip).limit(limit)
                else:
-                    cur = instance.find(query,query1).limit(limit)
+                    cur = instance.find(query,query1).sort(sort_param).skip(skip).limit(limit)
 
         # Delete
 

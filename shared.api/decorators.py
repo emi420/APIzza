@@ -54,10 +54,46 @@ class VoolksAPIAuthRequired(object):
             response['Access-Control-Allow-Origin'] = '*'
             return response
         else:
-            # If auth ok, continue
-            response = self.f(*args)
+            
             responseObj =  json.loads(r.text)
+
+            # Check for general (delete, get, put, create) permissions
+            if (
+                (request.META["REQUEST_METHOD"] == "DELETE" and responseObj['permissions'].find("-delete") >= 0) or
+                (request.META["REQUEST_METHOD"] == "GET" and responseObj['permissions'].find("-get") >= 0) or
+                (request.META["REQUEST_METHOD"] == "PUT" and responseObj['permissions'].find("-put") >= 0) or
+                (request.META["REQUEST_METHOD"] == "POST" and responseObj['permissions'].find("-create") >= 0)
+               ):
+                res = {}
+                res['code'] = 400
+                res['text'] = "API permission denied"
+                
+                response = HttpResponse(json.dumps(res), content_type="application/json")
+                response['Access-Control-Allow-Origin'] = '*'
+                return response
+
+            # Check for general "where" clause/parameter permissions
+            elif request.META["REQUEST_METHOD"] == "GET" and responseObj['permissions'].find("-where") >= 0 and "where" in request.GET:
+                res = {}
+                res['code'] = 400
+                res['text'] = "API permission denied"
+                response = HttpResponse(json.dumps(res), content_type="application/json")
+                response['Access-Control-Allow-Origin'] = '*'
+                return response
+
+            # Check for class data.api class creation permission
+            elif request.get_full_path().find("/classes/") >= 0 and request.META["REQUEST_METHOD"] == "POST" and responseObj['permissions'].find("-classCreation") >= 0:
+                res = {}
+                res['code'] = 400
+                res['text'] = "API permission denied"
+                response = HttpResponse(json.dumps(res), content_type="application/json")
+                response['Access-Control-Allow-Origin'] = '*'
+                return response
+
+            response = self.f(*args)
             response['Access-Control-Allow-Origin'] = responseObj['domain']
             response['Access-Control-Allow-Methods'] = responseObj['permissions']
             return response
+            
+            
 

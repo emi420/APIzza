@@ -1,24 +1,19 @@
-echo Running key.api ... ; \
+source ENV/bin/activate ;
+
 cd key.api ; \
-
-#source ENV/bin/activate ; \
 python manage.py runserver localhost:7999 & \
+echo "key.api started on localhost:7999" ; \
 
-echo Running auth.api ... ; \
 cd ../auth.api ; \
-
-#source ENV/bin/activate ; \
 python manage.py runserver localhost:8000 & \
+echo "auth.api started on localhost:8000" ; \
 
-echo Running data.api ... ; \
 cd ../data.api ; \
+python manage.py runserver localhost:8001 & \
+echo "data.api started on localhost:8001" ; \
 
-#source ENV/bin/activate ; \
-python manage.py runserver localhost:8001 
-
-echo Running file.api ... ; \
 cd ../file.api ; \
+python manage.py runserver localhost:7998 & \
+echo "file.api started on localhost:7998" ; \
 
-#source ENV/bin/activate ; \
-python manage.py runserver localhost:80012
 
