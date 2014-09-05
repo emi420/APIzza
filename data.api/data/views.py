@@ -24,7 +24,7 @@ def get_api_credentials(request):
 def classes(request, class_name):
     ''' Get, Delete, Count or Update multiple items'''
     ''' Create a single item '''
-
+    
     response = {}
     sessionid = request.META.get('HTTP_X_VOOLKS_SESSION_ID')
     (app, key) = get_api_credentials(request)
@@ -45,11 +45,16 @@ def classes(request, class_name):
         # Create 
         
         data = request.body
-        parsed_data = json.loads(data)
         
+        try:
+            parsed_data = json.loads(data)
+        except(e):
+            return HttpResponse(json.dumps({"error":"Invalid JSON","code":"533"}) + "\n", content_type="application/json")
+
         parsed_data['createdAt'] = str(datetime.now())
         obj = instance.insert(parsed_data)
         response['id'] = str(obj)
+        
         
     else:
 

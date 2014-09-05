@@ -54,10 +54,9 @@ class VoolksAPIAuthRequired(object):
             response['Access-Control-Allow-Origin'] = '*'
             return response
         else:
-            # If auth ok, continue
-            response = self.f(*args)
-            responseObj =  json.loads(r.text)
             
+            responseObj =  json.loads(r.text)
+
             # Check for general (delete, get, put, create) permissions
             if (
                 (request.META["REQUEST_METHOD"] == "DELETE" and responseObj['permissions'].find("-delete") >= 0) or
@@ -68,6 +67,7 @@ class VoolksAPIAuthRequired(object):
                 res = {}
                 res['code'] = 400
                 res['text'] = "API permission denied"
+                
                 response = HttpResponse(json.dumps(res), content_type="application/json")
                 response['Access-Control-Allow-Origin'] = '*'
                 return response
@@ -90,8 +90,10 @@ class VoolksAPIAuthRequired(object):
                 response['Access-Control-Allow-Origin'] = '*'
                 return response
 
-            else:
-                response['Access-Control-Allow-Origin'] = responseObj['domain']
-                response['Access-Control-Allow-Methods'] = responseObj['permissions']
-                return response
+            response = self.f(*args)
+            response['Access-Control-Allow-Origin'] = responseObj['domain']
+            response['Access-Control-Allow-Methods'] = responseObj['permissions']
+            return response
+            
+            
 
