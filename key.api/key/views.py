@@ -22,7 +22,7 @@ def check_key(request):
         permissionsObj = AppPermission.objects.get(objid=app)
         permissions = permissionsObj.permissions
     except:
-        permissions = "PUT, DELETE, POST, GET, OPTIONS"
+        permissions = ""
 
     return HttpResponse(json.dumps({"domain": appObj.dominio, "permissions": permissions}),status=200)
 

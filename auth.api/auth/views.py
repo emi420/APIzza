@@ -11,6 +11,10 @@ def signup(request):
    ''' Register user '''
 
    response = {}
+   
+   # get app id
+   # username = request.GET.get('username','') + app id
+   
    username = request.GET.get('username','')
    password = request.GET.get('password','')
             
