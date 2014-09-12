@@ -44,13 +44,19 @@ def classes(request, class_name):
         
         # Create 
         
-        data = request.body
-        
         try:
+            data = request.body
+        except:
+            data = request.POST.items()[0][0]
+            
+        parsed_data = json.loads(data)
+        
+        '''try:
             parsed_data = json.loads(data)
-        except(e):
+        except:
             return HttpResponse(json.dumps({"error":"Invalid JSON","code":"533"}) + "\n", content_type="application/json")
-
+        '''
+        
         parsed_data['createdAt'] = str(datetime.now())
         obj = instance.insert(parsed_data)
         response['id'] = str(obj)

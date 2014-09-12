@@ -88,8 +88,6 @@ def createBase64(request):
     
     (app, key) = get_api_credentials(request)
 
-    #import pdb; pdb.set_trace();
-
     if len(request.POST) < 1:
         return HttpResponse("NO_FILES_FOUND")
     else:
