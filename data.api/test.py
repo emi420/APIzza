@@ -32,6 +32,7 @@ class DataApiTestCase(unittest.TestCase):
         self.data_api_url = DATA_API_URL
         self.app_id = API_APP_ID
         self.app_key = API_APP_KEY
+        self.tmp_test_data = {}
         
         # Set up logger
         self.log = logging.getLogger("DataApiTestCase")
@@ -54,7 +55,8 @@ class DataApiTestCase(unittest.TestCase):
 
     # Setup called for each test
     def setUp(self):
-        self.log.debug("Test setup done.")
+        #self.log.debug("Test setup done.")
+        return
 
     # Tear down called for each test
     def tearDown(self):
@@ -64,55 +66,143 @@ class DataApiTestCase(unittest.TestCase):
     ###########################################################################
     
     # Test for needed vars...
-    def test_000_pretesting(self):
-        self.log.debug("Starting test #000...")
+    def test_000_pretest(self):
+        self.log.debug("Pretest (testing required configurations)")
         self.assertNotEqual(self.data_api_url, "")
 
-    # Test creation of class...
-    def test_001_creating(self):
-        self.log.debug("Starting test #001...")
-        headers = {"content-type": "application/json", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+    # Test creation of class on db...
+    def test_001_create(self):
+        self.log.debug("I want to create an object")
+        #headers = {"content-type": "application/json", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
         url = self.data_api_url + "classes/testclass/"
         data = {"testNumber": 123, "testDescription": "This is a decription.", "testExtra": "Extra testing field..." }
         params = {}
         ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
         responseObj =  json.loads(ret.text)
-        self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.tmp_test_data["id_created"] = responseObj["id"]
+        #self.log.debug("Response from api: " + ret.text)
+        #self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
         self.assertTrue("id" in responseObj)
 
-    # Test for getting data from record...
-    def test_002_querying(self):
-        self.log.debug("Starting test #002...")
+    # Test for getting data from db...
+    def test_002_get(self):
+        self.log.debug("I want to get an object")
+        url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testNumber" in responseObj and responseObj["testNumber"] == 123)
+
+    # Test for getting all objects of class
+    def test_003_get_all(self):
+        self.log.debug("I want to get all objects")
         url = self.data_api_url + "classes/testclass/"
         ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
         responseObj =  json.loads(ret.text)
-        self.log.debug("Response from api: " + json.dumps(responseObj))
-        self.assertNotEqual(responseObj, None)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testNumber" in responseObj["result"][0])
 
-    # Test updating of record...
-    def test_003_updating(self):
-        self.log.debug("Starting test #003...")
-        self.assertNotEqual(self.data_api_url, "")
+    # Test for updating an object
+    def test_004_update(self):
+        self.log.debug("I want to update an object")
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
+        data = {"testNumber": 321, "testDescription": "This is a description.", "testExtra": "Extra testing field..." }
+        params = {}
+        ret = requests.put(url, params=params, data=json.dumps(data), headers=headers)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("updatedAt" in responseObj and "testNumber" in responseObj and responseObj["testNumber"] == 321)
 
-    def test_004_filtering(self):
-        self.log.debug("Starting test #004...")
-        self.assertNotEqual(self.data_api_url, "")
+    # Test for deleting an object
+    def test_995_delete(self):
+        self.log.debug("I want to delete an object")
+        url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
+        ret = requests.delete(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue(responseObj == {})
 
-    def test_005_limiting(self):
-        self.log.debug("Starting test #005...")
-        self.assertNotEqual(self.data_api_url, "")
+    # Test for deleting all objects
+    def test_996_delete_all(self):
+        self.log.debug("I want to delete all objects")
+        url = self.data_api_url + "classes/testclass/"
+        ret = requests.delete(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue(responseObj == {})
 
-    def test_006_sorting(self):
-        self.log.debug("Starting test #006...")
-        self.assertNotEqual(self.data_api_url, "")
-
-    def test_007_permissions(self):
-        self.log.debug("Starting test #007...")
-        self.assertNotEqual(self.data_api_url, "")
+    # Test for filtering objects
+    def test_007_filter(self):
+        self.log.debug("I want to filter all objects using a where parameter")
+        url = self.data_api_url + "classes/testclass/?where=" + """{"testNumber":321}"""
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testNumber" in responseObj["result"][0] and responseObj["result"][0]["testNumber"] == 321)
         
+    # Test for filtering objects (reg. ex.)
+    def test_008_filter_regex(self):
+        self.log.debug("I want to filter all objects using a regular expression")
+        url = self.data_api_url + "classes/testclass/?where=" + """{"testDescription":{"$regex":"^This is a (.*)$"}}"""
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testNumber" in responseObj["result"][0] and responseObj["result"][0]["testNumber"] == 321)
         
+    # Test for getting only some properties
+    def test_009_projections(self):
+        self.log.debug("I want to get only some properties on the response objects (projections)")
+        url = self.data_api_url + "classes/testclass/?where=" + """[{"testNumber":321},{"testDescription":1}]"""
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testDescription" in responseObj["result"][0] and not "testExtra" in responseObj["result"][0])
+
+    # Test for limiting query
+    def test_010_limit(self):
+        self.log.debug("I want to limit the objects count in the response")
         
+        # we create another object with same test number for testing...
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.data_api_url + "classes/testclass/"
+        data = {"testNumber": 321, "testDescription": "This is a decription for 999.", "testExtra": "Extra testing field 999..." }
+        params = {}
+        ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
         
-    def test_099_deleting(self):
-        self.log.debug("Starting test #099...")
-        self.assertNotEqual(self.data_api_url, "")
+        # test limiting...
+        url = self.data_api_url + "classes/testclass/?limit=1&where=" + """{"testNumber":321}"""
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testNumber" in responseObj["result"][0] and len(responseObj["result"]) == 1)
+
+    # Test for skipping query
+    def test_011_skip(self):
+        self.log.debug("I want to skip objects on the response")
+        url = self.data_api_url + "classes/testclass/?limit=1&skip=1&where=" + """{"testNumber":321}"""
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testNumber" in responseObj["result"][0] and len(responseObj["result"]) == 1 and responseObj["result"][0]["testDescription"].find("999") >= 0)
+
+    # Test for counting query
+    def test_012_count(self):
+        self.log.debug("I want to count the objects in the response")
+        url = self.data_api_url + "classes/testclass/?where=" + """{"testNumber":321}"""
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue(len(responseObj["result"]) == 2)
+
+    # Test for ordering query
+    def test_013_order(self):
+        self.log.debug("I want to order the objects on the response")
+        url = self.data_api_url + "classes/testclass/?sort=" + """{"_id":-1}&limit=1"""
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testNumber" in responseObj["result"][0] and len(responseObj["result"]) == 1 and responseObj["result"][0]["testDescription"].find("999") >= 0)
+
