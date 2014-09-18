@@ -8,6 +8,7 @@ urlpatterns = patterns('',
     url(r'^login/$', 'auth.views.login'),
     url(r'^signup/$', 'auth.views.signup'),
     url(r'^validate/(.*)/$', 'auth.views.validate_session'),
+    url(r'^permissions/(.*)/$', 'auth.views.permissions'),
     url(r'^users/admin/', include(admin.site.urls)),
     url(r'^admin/', include(admin.site.urls))
 )
