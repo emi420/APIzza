@@ -86,7 +86,19 @@ class AuthApiTestCase(unittest.TestCase):
         self.log.debug("I want to create permissions for an object")
         headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
         url = self.auth_api_url + "permissions/" + self.tmp_test_data["session_sessionid"] + "/"
-        # xxx - test
+        data = { "5412f6ca3c45889fbda30aef": { self.tmp_test_data["session_userid"]: { "read": "true", "write": "true" }, "*": { "read": "true", "write": "false" } } }
+        params = {}
+        ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("code" in responseObj and responseObj["code"] == 1)
+
+    # Test permissions updating...
+    def test_003_create_permission(self):
+        self.log.debug("I want to update permissions for an object")
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "permissions/" + self.tmp_test_data["session_sessionid"] + "/"
         data = { "5412f6ca3c45889fbda30aef": { self.tmp_test_data["session_userid"]: { "read": "true", "write": "true" }, "*": { "read": "false", "write": "false" } } }
         params = {}
         ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
@@ -95,3 +107,24 @@ class AuthApiTestCase(unittest.TestCase):
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("code" in responseObj and responseObj["code"] == 1)
 
+    # Test permissions getting...
+    def test_004_get_permission(self):
+        self.log.debug("I want to get permissions for an object")
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "permissions/" + self.tmp_test_data["session_sessionid"] + "/?objid=5412f6ca3c45889fbda30aef&userid=" + str(self.tmp_test_data["session_userid"])
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("code" in responseObj and responseObj["code"] == 1) # and self.tmp_test_data["session_userid"] in responseObj)
+
+    # Test permissions deletion...
+    def test_005_delete_permission(self):
+        self.log.debug("I want to delete permissions for an object")
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "permissions/" + self.tmp_test_data["session_sessionid"] + "/?objid=5412f6ca3c45889fbda30aef&userid=" + str(self.tmp_test_data["session_userid"])
+        ret = requests.delete(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("code" in responseObj and responseObj["code"] == 1)
