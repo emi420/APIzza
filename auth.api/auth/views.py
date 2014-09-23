@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.contrib.sessions.backends.db import SessionStore
+from auth.models import AuthPermission
 
 @HttpOptionsDecorator
 @VoolksAPIAuthRequired
@@ -136,4 +137,48 @@ def validate_session(request, session_id):
    return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
    
    
+@HttpOptionsDecorator
+@VoolksAPIAuthRequired
+def permissions(request, session_id):
+    ''' Manage user permissions for objects '''
+
+    response = {}
+    s = SessionStore(session_key=session_id)
+
+    # Check for valid session
+    if 'id' in s:
+        # Create permissions for object?
+        if request.META["REQUEST_METHOD"] == "POST":
+            data = request.POST.items()[0][0]
+            parsed_data = json.loads(data)
+            db_objid = ""
+            db_user = ""
+            db_user_permissions = ""
+            db_other_permissions = ""
+            for objid in parsed_data.iterkeys():
+                db_objid = objid
+                for user in parsed_data[objid].iterkeys():
+                    if user == "*":
+                        db_other_permissions = str(parsed_data[objid][user]).replace("{u'", "{'").replace(", u'", ", '").replace(": u'", ": '")
+                    else:
+                        db_user = user
+                        db_user_permissions = str(parsed_data[objid][user]).replace("{u'", "{'").replace(", u'", ", '").replace(": u'", ": '")
+
+            #response['debug'] = " db_objid = " + db_objid + " db_user = " + db_user + " db_user_permissions = " + db_user_permissions + " db_other_permissions = " + db_other_permissions
+            
+            # TODO: Restrictions & validations...
+
+            try:
+                AuthPermission.objects.get(objid=db_objid, user=db_user)
+                AuthPermission.objects.update(objid=db_objid, user=db_user, user_permissions=db_user_permissions, other_permissions=db_other_permissions)
+            except AuthPermission.DoesNotExist:
+                AuthPermission.objects.create(objid=db_objid, user=db_user, user_permissions=db_user_permissions, other_permissions=db_other_permissions)
+
+            response['code'] = 1
+        else:
+            response['code'] = 0
+    else:
+        response['code'] = 0
+
+    return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
   
