@@ -24,7 +24,7 @@ def get_api_credentials(request):
 def classes(request, class_name):
     ''' Get, Delete, Count or Update multiple items'''
     ''' Create a single item '''
-    
+
     response = {}
     sessionid = request.META.get('HTTP_X_VOOLKS_SESSION_ID')
     (app, key) = get_api_credentials(request)
@@ -44,17 +44,11 @@ def classes(request, class_name):
         
         # Create 
         
-        data = request.body
-        
-        try:
-            parsed_data = json.loads(data)
-        except(e):
-            return HttpResponse(json.dumps({"error":"Invalid JSON","code":"533"}) + "\n", content_type="application/json")
-
+        data = request.POST.items()[0][0]
+        parsed_data = json.loads(data)
         parsed_data['createdAt'] = str(datetime.now())
         obj = instance.insert(parsed_data)
         response['id'] = str(obj)
-        
         
     else:
 
@@ -74,10 +68,14 @@ def classes(request, class_name):
             query = {}
 
         if "sort" in request.GET:
+            # * http://docs.mongodb.org/manual/reference/method/cursor.sort/
+            # * http://stackoverflow.com/questions/10242149/sorting-with-mongodb-and-python
+            # sort_param = json.loads(request.GET["sort"])
             sort_param = []
             for k, v in json.loads(request.GET["sort"]).iteritems():
                 sort_param.insert(0, (k, v))
         else:
+            # sort_param = {"$natural": 1}
             sort_param = [("$natural", 1)]
 
         # Make query for permissions
@@ -244,6 +242,7 @@ def classes_get_one(request, class_name, obj_id):
             if request_put:
                 data = request.read()
                 parsed_data = json.loads(data)
+                parsed_data['createdAt'] = obj['createdAt']
                 parsed_data['updatedAt'] = str(datetime.now())
                 instance.update(query, parsed_data)
                 obj = instance.find_one(query)
