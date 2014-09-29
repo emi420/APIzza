@@ -84,6 +84,7 @@ def classes(request, class_name):
             query["$or"] = [
                 {"_mod":{"$exists": False}},
             ]
+
         else:
 
             session = validate_session(sessionid, app, key)
@@ -168,6 +169,13 @@ def validate_session(sessionid, app, key):
     return response
 
 
+def get_object_permissions(sessionid, app, key, obj_id):
+    ''' Check if object have specific permissions using an external API (auth.api)'''
+
+    import requests
+    res = requests.get(USER_SESSION_URL + 'permissions/' + sessionid + '/?objid=' + obj_id, headers={'X-Voolks-App-Id': app, 'X-Voolks-Api-Key': key},verify=False)
+    response = json.loads(res.text)
+    return response
 
 @csrf_exempt
 @HttpOptionsDecorator
@@ -189,6 +197,15 @@ def classes_get_one(request, class_name, obj_id):
     
 
     if obj_id and obj_id is not "":
+
+        # Check if object has specific permissions
+        if not sessionid:
+            # xxx
+            xxx="xxx"
+        else:
+            obj_perm = get_object_permissions(sessionid, app, key, obj_id)
+        #    if not "xxx" in obj_perm:
+        #        return HttpResponse(json.dumps({"error":"Permission denied.","code":"55"}) + "\n", content_type="application/json")
 
         query = {}
         query["_id"] = ObjectId(obj_id)

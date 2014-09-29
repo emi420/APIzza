@@ -30,6 +30,8 @@ class DataApiTestCase(unittest.TestCase):
     def setUpClass(self):
         # Set up general vars
         self.data_api_url = DATA_API_URL
+        self.auth_api_url = AUTH_API_URL
+        self.key_api_url = KEYS_API_URL
         self.app_id = API_APP_ID
         self.app_key = API_APP_KEY
         self.tmp_test_data = {}
@@ -79,9 +81,9 @@ class DataApiTestCase(unittest.TestCase):
         data = {"testNumber": 123, "testDescription": "This is a decription.", "testExtra": "Extra testing field..." }
         params = {}
         ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
+        #self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         self.tmp_test_data["id_created"] = responseObj["id"]
-        #self.log.debug("Response from api: " + ret.text)
         #self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
         self.assertTrue("id" in responseObj)
 
@@ -90,6 +92,7 @@ class DataApiTestCase(unittest.TestCase):
         self.log.debug("I want to get an object")
         url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
         ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        #self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("testNumber" in responseObj and responseObj["testNumber"] == 123)
@@ -114,24 +117,6 @@ class DataApiTestCase(unittest.TestCase):
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("updatedAt" in responseObj and "testNumber" in responseObj and responseObj["testNumber"] == 321)
-
-    # Test for deleting an object
-    def test_995_delete(self):
-        self.log.debug("I want to delete an object")
-        url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
-        ret = requests.delete(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
-        responseObj =  json.loads(ret.text)
-        #self.log.debug("Response from api: " + json.dumps(responseObj))
-        self.assertTrue(responseObj == {})
-
-    # Test for deleting all objects
-    def test_996_delete_all(self):
-        self.log.debug("I want to delete all objects")
-        url = self.data_api_url + "classes/testclass/"
-        ret = requests.delete(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
-        responseObj =  json.loads(ret.text)
-        #self.log.debug("Response from api: " + json.dumps(responseObj))
-        self.assertTrue(responseObj == {})
 
     # Test for filtering objects
     def test_007_filter(self):
@@ -206,3 +191,54 @@ class DataApiTestCase(unittest.TestCase):
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("testNumber" in responseObj["result"][0] and len(responseObj["result"]) == 1 and responseObj["result"][0]["testDescription"].find("999") >= 0)
 
+    ###########################################################################
+
+    # Test for setting permissions for object
+    def test_101_permissions_set(self):
+        self.log.debug("I want to set permissions for object (login as test with password test)")
+        
+        url = self.auth_api_url + "login/?username=test&password=test"
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        self.tmp_test_data["session_sessionid"] = responseObj["sessionId"]
+        self.tmp_test_data["session_userid"] = responseObj["id"]
+        
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "permissions/" + self.tmp_test_data["session_sessionid"] + "/"
+        data = { self.tmp_test_data["id_created"]: { self.tmp_test_data["session_userid"]: { "read": "true", "write": "true" }, "*": { "read": "false", "write": "false" } } }
+        params = {}
+        ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
+        
+        self.assertTrue(True)
+
+    # Test for getting object (no data expected, asking for object with permissions, without session)
+    def test_102_permissions_test_nok(self):
+        self.log.debug("I want to get no data when asking for object with permissions (without session)")
+        url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testNumber" not in responseObj)
+
+
+
+        
+    ###########################################################################
+
+    # Test for deleting an object
+    def test_995_delete(self):
+        self.log.debug("I want to delete an object")
+        url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
+        ret = requests.delete(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue(responseObj == {})
+
+    # Test for deleting all objects
+    def test_996_delete_all(self):
+        self.log.debug("I want to delete all objects")
+        url = self.data_api_url + "classes/testclass/"
+        ret = requests.delete(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue(responseObj == {})
