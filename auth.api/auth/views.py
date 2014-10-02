@@ -167,10 +167,13 @@ def permissions(request, session_id):
             # Validation by user session
             if str(s['id']) == db_user:
                 try:
-                    AuthPermission.objects.get(objid=db_objid, user=db_user)
-                    AuthPermission.objects.update(objid=db_objid, user=db_user, user_permissions=db_user_permissions, other_permissions=db_other_permissions)
+                    #AuthPermission.objects.filter(objid=db_objid).update(objid=db_objid,user=db_user, user_permissions=db_user_permissions, other_permissions=db_other_permissions)
+                    tmp = AuthPermission.objects.get(objid=db_objid)
+                    tmp.user = db_user
+                    tmp.user_permissions = db_user_permissions
+                    tmp.other_permissions = db_other_permissions
+                    tmp.save()
                 except AuthPermission.DoesNotExist:
-                    #AuthPermission.objects.create(objid=db_objid, user=db_user, user_permissions=db_user_permissions, other_permissions=db_other_permissions)
                     AuthPermission.objects.create(objid=db_objid, user=db_user, user_permissions=db_user_permissions, other_permissions=db_other_permissions)
                 response['code'] = 1
             else:

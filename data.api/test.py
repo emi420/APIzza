@@ -208,14 +208,17 @@ class DataApiTestCase(unittest.TestCase):
         data = { self.tmp_test_data["id_created"]: { self.tmp_test_data["session_userid"]: { "read": "true", "write": "true" }, "*": { "read": "false", "write": "false" } } }
         params = {}
         ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
-        
-        self.assertTrue(True)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj2 =  json.loads(ret.text)
+
+        self.assertTrue("code" in responseObj2 and responseObj2["code"] == 1)
 
     # Test for getting object (no data expected, asking for object with permissions, without session)
     def test_102_permissions_test_nok(self):
         self.log.debug("I want to get no data when asking for object with permissions (without session)")
         url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
         ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        #self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("testNumber" not in responseObj)
