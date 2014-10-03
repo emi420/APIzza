@@ -147,9 +147,13 @@ def permissions(request, session_id):
 
     # Check for valid session
     if 'id' in s:
-        # Create permissions for object?
-        if request.META["REQUEST_METHOD"] == "POST":
-            data = request.POST.items()[0][0]
+        # Create/update permissions for object
+        if request.META["REQUEST_METHOD"] == "POST" or request.META["REQUEST_METHOD"] == "PUT":
+            data = []
+            if request.META["REQUEST_METHOD"] == "POST":
+                data = request.POST.items()[0][0]
+            else:
+                data = request.read()
             parsed_data = json.loads(data)
             db_objid = ""
             db_user = ""
@@ -159,22 +163,56 @@ def permissions(request, session_id):
                 db_objid = objid
                 for user in parsed_data[objid].iterkeys():
                     if user == "*":
-                        db_other_permissions = str(parsed_data[objid][user]).replace("{u'", "{'").replace(", u'", ", '").replace(": u'", ": '")
+                        db_other_permissions = json.dumps(parsed_data[objid][user])
                     else:
                         db_user = user
-                        db_user_permissions = str(parsed_data[objid][user]).replace("{u'", "{'").replace(", u'", ", '").replace(": u'", ": '")
+                        db_user_permissions = json.dumps(parsed_data[objid][user])
 
-            #response['debug'] = " db_objid = " + db_objid + " db_user = " + db_user + " db_user_permissions = " + db_user_permissions + " db_other_permissions = " + db_other_permissions
-            
-            # TODO: Restrictions & validations...
+            # Validation by user session
+            if str(s['id']) == db_user:
+                try:
+                    #AuthPermission.objects.filter(objid=db_objid).update(objid=db_objid,user=db_user, user_permissions=db_user_permissions, other_permissions=db_other_permissions)
+                    tmp = AuthPermission.objects.get(objid=db_objid)
+                    tmp.user = db_user
+                    tmp.user_permissions = db_user_permissions
+                    tmp.other_permissions = db_other_permissions
+                    tmp.save()
+                except AuthPermission.DoesNotExist:
+                    AuthPermission.objects.create(objid=db_objid, user=db_user, user_permissions=db_user_permissions, other_permissions=db_other_permissions)
+                response['code'] = 1
+            else:
+                response['code'] = 0
 
-            try:
-                AuthPermission.objects.get(objid=db_objid, user=db_user)
-                AuthPermission.objects.update(objid=db_objid, user=db_user, user_permissions=db_user_permissions, other_permissions=db_other_permissions)
-            except AuthPermission.DoesNotExist:
-                AuthPermission.objects.create(objid=db_objid, user=db_user, user_permissions=db_user_permissions, other_permissions=db_other_permissions)
+        # Get permissions for object
+        elif request.META["REQUEST_METHOD"] == "GET":
+            objid = request.GET.get('objid','')
+            #userid = request.GET.get('userid','')
 
             response['code'] = 1
+            try:
+                #tmp = AuthPermission.objects.get(objid=objid, user=userid)
+                tmp = AuthPermission.objects.get(objid=objid)
+                uperms = json.loads(tmp.user_permissions)
+                operms = json.loads(tmp.other_permissions)                
+                response['permissions'] = { tmp.objid: { tmp.user: { "read": uperms["read"], "write": uperms["write"] }, "*": { "read": operms["read"], "write": operms["write"] } } }
+            except AuthPermission.DoesNotExist:
+                response['code'] = 0
+
+        # Detele permissions for object
+        elif request.META["REQUEST_METHOD"] == "DELETE":
+            objid = request.GET.get('objid','')
+            userid = request.GET.get('userid','')
+
+            # Validation by user session
+            if str(s['id']) == userid:
+                response['code'] = 1
+                try:
+                    AuthPermission.objects.filter(objid=objid, user=userid).delete()
+                except AuthPermission.DoesNotExist:
+                    response['code'] = 0
+            else:
+                response['code'] = 0
+
         else:
             response['code'] = 0
     else:

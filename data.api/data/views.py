@@ -9,6 +9,12 @@ from datetime import datetime
 USER_SESSION_URL = "http://localhost:8000/"
 DATABASE_NAME = "test"
 
+# xxx
+# For checking for specific permission when no session is provided
+CHK_SP_PERM_AUTH_USER = "test"
+CHK_SP_PERM_AUTH_PASSWORD = "test"
+
+
 def get_api_credentials(request):
     ''' Get app id and api key '''
 
@@ -96,6 +102,7 @@ def classes(request, class_name):
             query["$or"] = [
                 {"_mod":{"$exists": False}},
             ]
+
         else:
 
             session = validate_session(sessionid, app, key)
@@ -180,6 +187,23 @@ def validate_session(sessionid, app, key):
     return response
 
 
+def get_object_permissions(sessionid, app, key, obj_id):
+    ''' Check if object have specific permissions using an external API (auth.api)'''
+
+    import requests
+    res = requests.get(USER_SESSION_URL + 'permissions/' + sessionid + '/?objid=' + obj_id, headers={'X-Voolks-App-Id': app, 'X-Voolks-Api-Key': key},verify=False)
+    response = json.loads(res.text)
+    return response
+
+# xxx
+def get_tmp_session(app, key):
+    ''' Get temporary session (for checking existence of permissions) using an external API (auth.api)'''
+
+    import requests
+    res = requests.get(USER_SESSION_URL + "login/?username=" + CHK_SP_PERM_AUTH_USER + "&password=" + CHK_SP_PERM_AUTH_PASSWORD, headers={'X-Voolks-App-Id': app, 'X-Voolks-Api-Key': key},verify=False)
+    response = json.loads(res.text)
+    return response
+
 
 @csrf_exempt
 @HttpOptionsDecorator
@@ -201,6 +225,22 @@ def classes_get_one(request, class_name, obj_id):
     
 
     if obj_id and obj_id is not "":
+
+        # Check if object has specific permissions
+        if not sessionid:
+            # xxx
+            # No session, get temporary one for checking if specific permissions exist
+            tmp_session = get_tmp_session(app, key)
+            tmp_session_sessionid = tmp_session["sessionId"]
+            tmp_session_userid = tmp_session["id"]
+            obj_perm = get_object_permissions(tmp_session_sessionid, app, key, obj_id)
+            if obj_perm["code"] == 1:
+                return HttpResponse(json.dumps({"error":"Permission denied.","code":"45"}) + "\n", content_type="application/json")
+
+        else:
+            # Check if this user has the right specific permissions
+            obj_perm = get_object_permissions(sessionid, app, key, obj_id)
+            # TODO
 
         query = {}
         query["_id"] = ObjectId(obj_id)
