@@ -179,7 +179,7 @@ def get_object_permissions(sessionid, app, key, obj_id):
     ''' Check if object have specific permissions using an external API (auth.api)'''
 
     import requests
-    res = requests.get(USER_SESSION_URL + 'permissions/' + sessionid + '/?objid=' + obj_id, headers={'X-Voolks-App-Id': app, 'X-Voolks-Api-Key': key},verify=False)
+    res = requests.get(USER_SESSION_URL + 'permissions/?objid=' + obj_id, headers={'X-Voolks-Session-Id': sessionid, 'X-Voolks-App-Id': app, 'X-Voolks-Api-Key': key},verify=False)
     response = json.loads(res.text)
     return response
 
@@ -228,7 +228,11 @@ def classes_get_one(request, class_name, obj_id):
         else:
             # Check if this user has the right specific permissions
             obj_perm = get_object_permissions(sessionid, app, key, obj_id)
-            # TODO
+            if obj_perm["code"] == 1:
+                session = validate_session(sessionid, app, key)
+                if obj_perm["permissions"][obj_id]["*"]["read"] == "false" or str(session["userid"]) not in obj_perm["permissions"][obj_id]:
+                    return HttpResponse(json.dumps({"error":"Permission denied.","code":"46"}) + "\n", content_type="application/json")
+            # TODO: revisar/completar...
 
         query = {}
         query["_id"] = ObjectId(obj_id)

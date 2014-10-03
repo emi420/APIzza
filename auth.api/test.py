@@ -84,8 +84,8 @@ class AuthApiTestCase(unittest.TestCase):
     # Test permissions creation...
     def test_002_create_permission(self):
         self.log.debug("I want to create permissions for an object")
-        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
-        url = self.auth_api_url + "permissions/" + self.tmp_test_data["session_sessionid"] + "/"
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "permissions/"
         data = { "5412f6ca3c45889fbda30ae1": { self.tmp_test_data["session_userid"]: { "read": "true", "write": "true" }, "*": { "read": "true", "write": "false" } } }
         params = {}
         ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
@@ -97,8 +97,8 @@ class AuthApiTestCase(unittest.TestCase):
     # Test permissions updating...
     def test_003_update_permission(self):
         self.log.debug("I want to update permissions for an object")
-        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
-        url = self.auth_api_url + "permissions/" + self.tmp_test_data["session_sessionid"] + "/"
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "permissions/"
         data = { "5412f6ca3c45889fbda30ae1": { self.tmp_test_data["session_userid"]: { "read": "true", "write": "true" }, "*": { "read": "false", "write": "false" } } }
         params = {}
         ret = requests.put(url, params=params, data=json.dumps(data), headers=headers)
@@ -110,10 +110,9 @@ class AuthApiTestCase(unittest.TestCase):
     # Test permissions getting...
     def test_004_get_permission(self):
         self.log.debug("I want to get permissions for an object")
-        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
-        #url = self.auth_api_url + "permissions/" + self.tmp_test_data["session_sessionid"] + "/?objid=5412f6ca3c45889fbda30ae1&userid=" + str(self.tmp_test_data["session_userid"])
-        url = self.auth_api_url + "permissions/" + self.tmp_test_data["session_sessionid"] + "/?objid=5412f6ca3c45889fbda30ae1"
-        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "permissions/?objid=5412f6ca3c45889fbda30ae1"
+        ret = requests.get(url, headers=headers, verify=False)
         #self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
@@ -122,9 +121,9 @@ class AuthApiTestCase(unittest.TestCase):
     # Test permissions deletion...
     def test_005_delete_permission(self):
         self.log.debug("I want to delete permissions for an object")
-        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
-        url = self.auth_api_url + "permissions/" + self.tmp_test_data["session_sessionid"] + "/?objid=5412f6ca3c45889fbda30ae1&userid=" + str(self.tmp_test_data["session_userid"])
-        ret = requests.delete(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "permissions/?objid=5412f6ca3c45889fbda30ae1&userid=" + str(self.tmp_test_data["session_userid"])
+        ret = requests.delete(url, headers=headers, verify=False)
         #self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))

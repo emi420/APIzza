@@ -203,8 +203,8 @@ class DataApiTestCase(unittest.TestCase):
         self.tmp_test_data["session_sessionid"] = responseObj["sessionId"]
         self.tmp_test_data["session_userid"] = responseObj["id"]
         
-        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
-        url = self.auth_api_url + "permissions/" + self.tmp_test_data["session_sessionid"] + "/"
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "permissions/"
         data = { self.tmp_test_data["id_created"]: { self.tmp_test_data["session_userid"]: { "read": "true", "write": "true" }, "*": { "read": "false", "write": "false" } } }
         params = {}
         ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
@@ -223,6 +223,15 @@ class DataApiTestCase(unittest.TestCase):
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("testNumber" not in responseObj)
 
+    # Test for getting object (now asking for object with permissions with session)
+    def test_103_permissions_test_ok(self):
+        self.log.debug("I want to get data when asking for object with permissions (with session)")
+        url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
+        ret = requests.get(url, headers={'X-Voolks-Session-Id': self.tmp_test_data["session_sessionid"], 'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testNumber" in responseObj)
 
 
         

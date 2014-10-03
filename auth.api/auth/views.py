@@ -135,10 +135,12 @@ def validate_session(request, session_id):
    
 @HttpOptionsDecorator
 @VoolksAPIAuthRequired
-def permissions(request, session_id):
+def permissions(request):
     ''' Manage user permissions for objects '''
 
     response = {}
+
+    session_id = request.META.get('HTTP_X_VOOLKS_SESSION_ID')
     s = SessionStore(session_key=session_id)
 
     # Check for valid session
