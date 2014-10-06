@@ -14,7 +14,9 @@ AUTH_API_URL = "http://localhost:8000/"
 DATA_API_URL = "http://localhost:8001/"
 API_APP_ID = "1"
 API_APP_KEY = "1234"
-
+TEST_USERNAME = "test999"
+TEST_PASSWORD = "test999"
+TEST_OBJECT = "5412f6ca3c45889fbda30af1"
 
 ###########################################################################
 # DATA.API TEST CASE
@@ -32,6 +34,9 @@ class AuthApiTestCase(unittest.TestCase):
         self.auth_api_url = AUTH_API_URL
         self.app_id = API_APP_ID
         self.app_key = API_APP_KEY
+        self.test_username = TEST_USERNAME
+        self.test_password = TEST_PASSWORD
+        self.test_object = TEST_OBJECT
         self.tmp_test_data = {}
         
         # Set up logger
@@ -66,14 +71,29 @@ class AuthApiTestCase(unittest.TestCase):
     ###########################################################################
     
     # Test for needed vars...
-    def test_000_pretest(self):
+    def test_0000_pretest(self):
         self.log.debug("Pretest (testing required configurations)")
+        self.log.debug("Test auth.api URL: " + self.auth_api_url)
+        self.log.debug("Test username: " + self.test_username)
+        self.log.debug("Test password: " + self.test_password)
+        self.log.debug("Test object: " + self.test_object)
         self.assertNotEqual(self.auth_api_url, "")
 
-    # Test login (user=test&password=test)...
-    def test_001_login(self):
-        self.log.debug("I want to login as test with password test")
-        url = self.auth_api_url + "login/?username=test&password=test"
+    # Test user creation (user=test999&password=test999)...
+    def test_0001_create(self):
+        self.log.debug("I want to create a user")
+        url = self.auth_api_url + "signup/?username=" + self.test_username + "&password=" + self.test_password
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("id" in responseObj)
+
+    # Test authentication/login...
+    def test_0010_login(self):
+        #self.log.debug("I want to login as test with password test")
+        self.log.debug("I want to authenticate a user")
+        url = self.auth_api_url + "login/?username=" + self.test_username + "&password=" + self.test_password
         ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
@@ -81,12 +101,22 @@ class AuthApiTestCase(unittest.TestCase):
         self.tmp_test_data["session_userid"] = responseObj["id"]
         self.assertTrue("id" in responseObj)
 
+    # Test session validation
+    def test_0011_validate(self):
+        self.log.debug("I want to validate session for a user")
+        url = self.auth_api_url + "validate/" + self.tmp_test_data["session_sessionid"] + "/"
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        #self.log.debug("Raw response from api: " + json.dumps(responseObj))
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("userid" in responseObj)
+        
     # Test permissions creation...
-    def test_002_create_permission(self):
-        self.log.debug("I want to create permissions for an object")
+    def test_0020_create_permission(self):
+        self.log.debug("I want to create user permissions for an object")
         headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
         url = self.auth_api_url + "permissions/"
-        data = { "5412f6ca3c45889fbda30ae1": { self.tmp_test_data["session_userid"]: { "read": "true", "write": "true" }, "*": { "read": "true", "write": "false" } } }
+        data = { self.test_object: { self.tmp_test_data["session_userid"]: { "read": "true", "write": "true" }, "*": { "read": "true", "write": "false" } } }
         params = {}
         ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
         #self.log.debug("Raw response from api: " + ret.text)
@@ -95,11 +125,11 @@ class AuthApiTestCase(unittest.TestCase):
         self.assertTrue("code" in responseObj and responseObj["code"] == 1)
 
     # Test permissions updating...
-    def test_003_update_permission(self):
-        self.log.debug("I want to update permissions for an object")
+    def test_0030_update_permission(self):
+        self.log.debug("I want to update user permissions for an object")
         headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
         url = self.auth_api_url + "permissions/"
-        data = { "5412f6ca3c45889fbda30ae1": { self.tmp_test_data["session_userid"]: { "read": "true", "write": "true" }, "*": { "read": "false", "write": "false" } } }
+        data = { self.test_object: { self.tmp_test_data["session_userid"]: { "read": "true", "write": "true" }, "*": { "read": "false", "write": "false" } } }
         params = {}
         ret = requests.put(url, params=params, data=json.dumps(data), headers=headers)
         #self.log.debug("Raw response from api: " + ret.text)
@@ -108,10 +138,10 @@ class AuthApiTestCase(unittest.TestCase):
         self.assertTrue("code" in responseObj and responseObj["code"] == 1)
 
     # Test permissions getting...
-    def test_004_get_permission(self):
-        self.log.debug("I want to get permissions for an object")
+    def test_0040_get_permission(self):
+        self.log.debug("I want to get user permissions for an object")
         headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
-        url = self.auth_api_url + "permissions/?objid=5412f6ca3c45889fbda30ae1"
+        url = self.auth_api_url + "permissions/?objid=" + self.test_object
         ret = requests.get(url, headers=headers, verify=False)
         #self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
@@ -119,11 +149,21 @@ class AuthApiTestCase(unittest.TestCase):
         self.assertTrue("code" in responseObj and responseObj["code"] == 1) # and self.tmp_test_data["session_userid"] in responseObj)
 
     # Test permissions deletion...
-    def test_005_delete_permission(self):
-        self.log.debug("I want to delete permissions for an object")
+    def test_0050_delete_permission(self):
+        self.log.debug("I want to delete user permissions for an object")
         headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
-        url = self.auth_api_url + "permissions/?objid=5412f6ca3c45889fbda30ae1&userid=" + str(self.tmp_test_data["session_userid"])
+        url = self.auth_api_url + "permissions/?objid=" + self.test_object + "&userid=" + str(self.tmp_test_data["session_userid"])
         ret = requests.delete(url, headers=headers, verify=False)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("code" in responseObj and responseObj["code"] == 1)
+
+    # Test user deletion...
+    def test_0900_delete(self):
+        self.log.debug("I want to delete a user")
+        url = self.auth_api_url + "delete/?username=" + self.test_username + "&password=" + self.test_password
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
         #self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
