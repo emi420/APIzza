@@ -222,3 +222,55 @@ def permissions(request):
 
     return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
   
+@HttpOptionsDecorator
+@VoolksAPIAuthRequired
+def delete(request):
+    ''' Delete user '''
+
+    response = {}
+    username = request.GET.get('username','')
+    password = request.GET.get('password','')
+            
+    # Error codes if missing data
+
+    if username == '':
+        response['code'] = 54
+        response['text'] = "Username not provided"
+        return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+
+    elif password == '':
+        response['code'] = 55
+        response['text'] = "Password not provided"
+        return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+
+    else:
+
+        # Delete user
+
+        # User.objects.filter(email=username, username=username, password=password).delete()
+        # NOT WORKING => AUTHENTICATE
+
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
+        
+            try:
+                User.objects.filter(username=username).delete()
+            except User.DoesNotExist:
+                response['code'] = 57
+                response['text'] = "Can't delete user"
+                return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+
+            # Build response
+
+            response['code'] = 1
+            response['text'] = "User deleted"
+            return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+
+        else:
+
+            # Can't authenticate
+
+            response['code'] = 46
+            response['text'] = "Invalid username or password"
+            return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
