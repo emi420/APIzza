@@ -229,10 +229,18 @@ def classes_get_one(request, class_name, obj_id):
             # Check if this user has the right specific permissions
             obj_perm = get_object_permissions(sessionid, app, key, obj_id)
             if obj_perm["code"] == 1:
+                # Object has specific permissions, check if user has the rights to access it
                 session = validate_session(sessionid, app, key)
-                if obj_perm["permissions"][obj_id]["*"]["read"] == "false" or str(session["userid"]) not in obj_perm["permissions"][obj_id]:
-                    return HttpResponse(json.dumps({"error":"Permission denied.","code":"46"}) + "\n", content_type="application/json")
-            # TODO: revisar/completar...
+                if not "userid" in session:
+                    return HttpResponse(json.dumps({"error":"Invalid session","code":"53"}) + "\n", content_type="application/json")
+                else:
+                    userid = str(session['userid'])
+                    if request_delete or request_put:
+                        if userid not in obj_perm["permissions"][obj_id] and obj_perm["permissions"][obj_id]["*"]["write"] == "false":
+                            return HttpResponse(json.dumps({"error":"Permission denied.","code":"47"}) + "\n", content_type="application/json")
+                    else:
+                        if userid not in obj_perm["permissions"][obj_id] and obj_perm["permissions"][obj_id]["*"]["read"] == "false":
+                            return HttpResponse(json.dumps({"error":"Permission denied.","code":"46"}) + "\n", content_type="application/json")
 
         query = {}
         query["_id"] = ObjectId(obj_id)

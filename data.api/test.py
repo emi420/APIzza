@@ -195,14 +195,16 @@ class DataApiTestCase(unittest.TestCase):
 
     # Test for setting permissions for object
     def test_101_permissions_set(self):
-        self.log.debug("I want to set permissions for object (login as test with password test)")
+        self.log.debug("I want to set permissions for object (first login as test with password test)")
         
+        # login with test/test...
         url = self.auth_api_url + "login/?username=test&password=test"
         ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
         responseObj =  json.loads(ret.text)
         self.tmp_test_data["session_sessionid"] = responseObj["sessionId"]
         self.tmp_test_data["session_userid"] = responseObj["id"]
-        
+
+        # set permissions for object...
         headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
         url = self.auth_api_url + "permissions/"
         data = { self.tmp_test_data["id_created"]: { self.tmp_test_data["session_userid"]: { "read": "true", "write": "true" }, "*": { "read": "false", "write": "false" } } }
@@ -233,15 +235,78 @@ class DataApiTestCase(unittest.TestCase):
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("testNumber" in responseObj)
 
-
+    # Test for getting object (asking for object with permissions with another session)
+    def test_104_permissions_test_nok(self):
+        self.log.debug("I want to get no data when asking for object with permissions, with other user session (first login as test2 with password test2)")
         
+        # login with test2/test2...
+        url = self.auth_api_url + "login/?username=test2&password=test2"
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        self.tmp_test_data["session_sessionid_test2"] = responseObj["sessionId"]
+        self.tmp_test_data["session_userid_test2"] = responseObj["id"]
+
+        # try to get object...
+        url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
+        ret = requests.get(url, headers={'X-Voolks-Session-Id': self.tmp_test_data["session_sessionid_test2"], 'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testNumber" not in responseObj)
+
+    # Test for getting object (asking for object with permissions with another session, but setting read permissions previously)
+    def test_105_permissions_test_ok(self):
+        self.log.debug("I want to get data when asking for object with permissions, with other user session (same as before but now setting read permissions previously)")
+
+        # update permissions...
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "permissions/"
+        data = { self.tmp_test_data["id_created"]: { self.tmp_test_data["session_userid"]: { "read": "true", "write": "true" }, "*": { "read": "true", "write": "false" } } }
+        params = {}
+        ret = requests.put(url, params=params, data=json.dumps(data), headers=headers)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj2 =  json.loads(ret.text)
+        
+        # try to get object...
+        url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
+        ret = requests.get(url, headers={'X-Voolks-Session-Id': self.tmp_test_data["session_sessionid_test2"], 'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testNumber" in responseObj)
+
+    def test_106_permissions_test_nok(self):
+        self.log.debug("I want to get no data when updating object with no write permissions for all (still with other user session)")
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid_test2"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
+        data = {"testNumber": 333, "testDescription": "This is a description.", "testExtra": "Extra testing field..." }
+        params = {}
+        ret = requests.put(url, params=params, data=json.dumps(data), headers=headers)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testNumber" not in responseObj)
+
+    def test_107_permissions_test_ok(self):
+        self.log.debug("I want to get data when updating object with no write permissions for all (now with owner user -who has the permission- session)")
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
+        data = {"testNumber": 333, "testDescription": "This is a description.", "testExtra": "Extra testing field..." }
+        params = {}
+        ret = requests.put(url, params=params, data=json.dumps(data), headers=headers)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testNumber" in responseObj)
+
     ###########################################################################
 
     # Test for deleting an object
     def test_995_delete(self):
         self.log.debug("I want to delete an object")
         url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
-        ret = requests.delete(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        ret = requests.delete(url, headers={'X-Voolks-Session-Id': self.tmp_test_data["session_sessionid"], 'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        #self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue(responseObj == {})
