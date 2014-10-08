@@ -13,7 +13,7 @@ python manage.py runserver localhost:8001 & \
 echo "data.api started on localhost:8001" ; \
 
 cd ../file.api ; \
-python manage.py runserver localhost:7998 & \
-echo "file.api started on localhost:7998" ; \
+python manage.py runserver localhost:7998
+#echo "file.api started on localhost:7998" ; \
 
 

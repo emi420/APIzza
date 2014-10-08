@@ -1,10 +1,22 @@
-# Key API
+Key.api
+=======
 
-For use this API, your app need an App ID and API Key.
+Manages app authentication and permissions for each module.
 
-Key.API manages app authorizations. 
+## Setup and run
 
-## Setup
+1.Create the database:
 
-You need to configure the KEYS_API_URL on shared.api/decorators.py so other APIs 
-know where this API is running.
+    $ python manage.py syncdb
+
+2.Run the project:
+
+    $ python manage.py runserver localhost:7999
+
+Now you can add an app from the admin (http://localhost:7999/admin/) and then run:
+
+    $ curl -H "X-Voolks-App-Id:1" -H "X-Voolks-Api-Key: 1234" http://localhost:7999/check_key/
+
+For testing the API key.
+
+3.You need to configure the KEYS_API_URL on shared.api/decorators.py.

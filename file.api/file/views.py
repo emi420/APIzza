@@ -87,15 +87,17 @@ def create(request):
 def createBase64(request):
     
     (app, key) = get_api_credentials(request)
-
+    
     #import pdb; pdb.set_trace();
-
+    
+    
     if len(request.POST) < 1:
         return HttpResponse("NO_FILES_FOUND")
     else:
         fileKey = request.POST.keys()[0]
         filename = fileKey
         path = settings.MEDIA_ROOT + app + "-" + key + "-" + filename + ".jpg"
+        dest = open(path, 'w+')
         dest.write(request.POST[fileKey][22:].decode('base64'))
         dest.close()
         return HttpResponse(filename + ".jpg")

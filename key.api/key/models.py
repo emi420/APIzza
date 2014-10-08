@@ -9,6 +9,11 @@ class App(models.Model):
     api_key = models.CharField(max_length=255)
     nombre = models.CharField(max_length=255)
     dominio = models.CharField(max_length=255)
+    
+    #appid = models.CharField(max_length=255,unique=True)
+    #apikey = models.CharField(max_length=255)
+    #name = models.CharField(max_length=255)
+    #domain = models.CharField(max_length=255)
 
     def __unicode__(self):
         return self.nombre
