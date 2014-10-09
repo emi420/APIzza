@@ -133,10 +133,13 @@ class VoolksAPIAuthRequired(object):
 
             response = self.f(*args)
             response['Access-Control-Allow-Origin'] = responseObj['domain']
-
+            
+            # xxx
+            # response['Access-Control-Allow-Methods'] = responseObj['permissions']
+            
             # FIXME CHECK
             response['Access-Control-Allow-Methods'] = "GET,DELETE,POST,OPTIONS,PUT"
-
+            
             return response
             
             
