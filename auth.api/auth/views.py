@@ -6,15 +6,24 @@ from django.contrib.auth import authenticate
 from django.contrib.sessions.backends.db import SessionStore
 from auth.models import AuthPermission
 
+
+def get_api_credentials(request):
+    ''' Get app id and api key '''
+
+    app = request.META.get('HTTP_X_VOOLKS_APP_ID')
+    key = request.META.get('HTTP_X_VOOLKS_API_KEY')
+    
+    return (app, key)
+
+
 @HttpOptionsDecorator
 @VoolksAPIAuthRequired
 def signup(request):
    ''' Register user '''
 
    response = {}
-   
-   # get app id
-   # username = request.GET.get('username','') + app id
+
+   (app, key) = get_api_credentials(request)
    
    username = request.GET.get('username','')
    password = request.GET.get('password','')
@@ -35,8 +44,9 @@ def signup(request):
 
      # Create user
       
-     user = User.objects.create_user(username, username, password)
-     
+     #user = User.objects.create_user(username, username, password)
+     user = User.objects.create_user(app + "-" + key + "-" + username, username, password)
+
      if user is not None:
 
          # Save session
@@ -71,6 +81,9 @@ def login(request):
    ''' Authenticate user '''
     
    response = {}
+
+   (app, key) = get_api_credentials(request)
+
    username = request.GET.get('username','')
    password = request.GET.get('password','')
             
@@ -90,7 +103,7 @@ def login(request):
       
      # Auhenticate user
      
-     user = authenticate(username=username, password=password)
+     user = authenticate(username=app + "-" + key + "-" + username, password=password)
      
      if user is not None:
 
@@ -228,6 +241,9 @@ def delete(request):
     ''' Delete user '''
 
     response = {}
+
+    (app, key) = get_api_credentials(request)
+
     username = request.GET.get('username','')
     password = request.GET.get('password','')
             
@@ -250,12 +266,12 @@ def delete(request):
         # User.objects.filter(email=username, username=username, password=password).delete()
         # NOT WORKING => AUTHENTICATE
 
-        user = authenticate(username=username, password=password)
+        user = authenticate(username=app + "-" + key + "-" + username, password=password)
 
         if user is not None:
         
             try:
-                User.objects.filter(username=username).delete()
+                User.objects.filter(username=app + "-" + key + "-" + username).delete()
             except User.DoesNotExist:
                 response['code'] = 57
                 response['text'] = "Can't delete user"
