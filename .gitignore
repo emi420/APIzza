@@ -8,3 +8,4 @@ local_settings.py
 **/ENV/
 **/*.sqlite3
 **/**/*.sqlite3
+**/**/settings.py

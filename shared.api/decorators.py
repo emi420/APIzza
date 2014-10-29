@@ -1,6 +1,7 @@
 import json
 import requests
 from django.http import HttpResponse
+import re
 
 KEYS_API_URL = "http://localhost:7999/"
 
@@ -57,8 +58,22 @@ class VoolksAPIAuthRequired(object):
             
             responseObj =  json.loads(r.text)
 
+            # Check domain matching referer
+            referer = request.META.get('HTTP_REFERER')
+            if not referer:
+                referer = ''
+            # remove the protocol and split the url at the slashes
+            referer = re.sub('^https?:\/\/', '', referer).split('/')
+            if referer[0] != responseObj['domain'] and responseObj['domain'] != '*':
+                res = {}
+                res['code'] = 400
+                res['text'] = "API permission denied - Invalid domain"
+                response = HttpResponse(json.dumps(res), content_type="application/json")
+                response['Access-Control-Allow-Origin'] = '*'
+                return response
+            
             # Check for general (delete, get, put, create) permissions
-            if (
+            elif (
                 (request.META["REQUEST_METHOD"] == "DELETE" and responseObj['permissions'].find("-delete") >= 0) or
                 (request.META["REQUEST_METHOD"] == "GET" and responseObj['permissions'].find("-get") >= 0) or
                 (request.META["REQUEST_METHOD"] == "PUT" and responseObj['permissions'].find("-put") >= 0) or
