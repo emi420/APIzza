@@ -74,6 +74,8 @@ class MailApiTestCase(unittest.TestCase):
         data = { "from": "test@voolks.com", "to": "maiorano@gmail.com", "subject": "Testing", "html": "<html><b>Testing email</b></html>" }
         params={}
         url = self.mail_api_url + "sendmail/"
+        # for testing general exception handling (you should uncomment raw response from api also)
+        #ret = requests.post(url, params=params, data = json.dumps(data) + "xxx", headers=headers)
         ret = requests.post(url, params=params, data = json.dumps(data), headers=headers)
         #self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)

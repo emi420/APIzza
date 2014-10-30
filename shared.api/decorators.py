@@ -17,7 +17,11 @@ class HttpOptionsDecorator(object):
         self.f = f;
 
     def __call__(self, *args):
-        response = self.f(*args)
+        # General exception handling/error reporting
+        try:
+            response = self.f(*args)
+        except Exception as e:
+            return HttpResponse(json.dumps({"error":"Internal error: " + type(e).__name__ + ": " + e.message, "code":"500"}) + "\n", content_type="application/json")
         set_access_control_headers(response)
         return response
         
@@ -146,7 +150,11 @@ class VoolksAPIAuthRequired(object):
                     response['Access-Control-Allow-Origin'] = '*'
                     return response
 
-            response = self.f(*args)
+            # General exception handling/error reporting
+            try:
+                response = self.f(*args)
+            except Exception as e:
+                return HttpResponse(json.dumps({"error":"Internal error: " + type(e).__name__ + ": " + e.message, "code":"500"}) + "\n", content_type="application/json")
             response['Access-Control-Allow-Origin'] = responseObj['domain']
             
             # xxx

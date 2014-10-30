@@ -10,11 +10,10 @@ def sendmail(request):
 
     if request.method == "POST":
 
+        data = request.POST.items()[0][0]
+        parsed_data = json.loads(data)
+
         try:
-
-            data = request.POST.items()[0][0]
-
-            parsed_data = json.loads(data)
 
             msg = EmailMultiAlternatives(parsed_data["subject"], parsed_data["html"], parsed_data["from"], [parsed_data["to"]])
             msg.attach_alternative(parsed_data["html"], "text/html")
