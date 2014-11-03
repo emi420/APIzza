@@ -158,6 +158,7 @@ def permissions(request):
     response = {}
 
     session_id = request.META.get('HTTP_X_VOOLKS_SESSION_ID')
+    request_content_type_json = request.META["CONTENT_TYPE"] == "application/json; charset=UTF-8"
     s = SessionStore(session_key=session_id)
 
     # Check for valid session
@@ -166,7 +167,15 @@ def permissions(request):
         if request.META["REQUEST_METHOD"] == "POST" or request.META["REQUEST_METHOD"] == "PUT":
             data = []
             if request.META["REQUEST_METHOD"] == "POST":
-                data = request.POST.items()[0][0]
+                if request_content_type_json:
+                    data = "{"
+                    params = dict([p.split('=') for p in request.body.split('&')])
+                    for key in params: 
+                        data = data + '"' + key + '":"' +params[key] + '",'
+                    data = data + "}"
+                    data = data.replace(",}","}")
+                else:
+                    data = request.POST.items()[0][0]
             else:
                 data = request.read()
             parsed_data = json.loads(data)

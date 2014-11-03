@@ -8,10 +8,19 @@ from django.core.mail import EmailMultiAlternatives
 @VoolksAPIAuthRequired
 def sendmail(request):
 
+    request_content_type_json = request.META["CONTENT_TYPE"] == "application/json; charset=UTF-8"
     if request.method == "POST":
 
-        data = request.POST.items()[0][0]
-        parsed_data = json.loads(data)
+         if request_content_type_json:
+            data = "{"
+            params = dict([p.split('=') for p in request.body.split('&')])
+            for key in params: 
+                data = data + '"' + key + '":"' +params[key] + '",'
+            data = data + "}"
+            data = data.replace(",}","}")
+        else:
+            data = request.POST.items()[0][0]
+            parsed_data = json.loads(data)
 
         try:
 

@@ -44,17 +44,24 @@ def classes(request, class_name):
     result = []
     request_delete = request.META["REQUEST_METHOD"] == "DELETE"
     request_post = request.META["REQUEST_METHOD"] == "POST"
+    request_content_type_json = request.META["CONTENT_TYPE"] == "application/json; charset=UTF-8"
     queryIsList = False
-
+    
     if request_post:
         
         # Create 
-        
-
-        try:
-            data = request.body
-        except:
-            data = request.POST.items()[0][0]
+        if request_content_type_json:
+            data = "{"
+            params = dict([p.split('=') for p in request.body.split('&')])
+            for key in params: 
+                data = data + '"' + key + '":"' +params[key] + '",'
+            data = data + "}"
+            data = data.replace(",}","}")
+        else:
+            try:
+                data = request.body
+            except:
+                data = request.POST.items()[0][0]
             
         parsed_data = json.loads(data)
         
@@ -63,7 +70,6 @@ def classes(request, class_name):
         except:
             return HttpResponse(json.dumps({"error":"Invalid JSON","code":"533"}) + "\n", content_type="application/json")
         '''
-
         parsed_data['createdAt'] = str(datetime.now())
         obj = instance.insert(parsed_data)
         response['id'] = str(obj)
