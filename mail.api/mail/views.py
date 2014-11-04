@@ -20,7 +20,7 @@ def sendmail(request):
             data = data.replace(",}","}")
         else:
             data = request.POST.items()[0][0]
-            parsed_data = json.loads(data)
+        parsed_data = json.loads(data)
 
         try:
 
