@@ -87,6 +87,20 @@ class DataApiTestCase(unittest.TestCase):
         #self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
         self.assertTrue("id" in responseObj)
 
+     # Test creation of class on db...
+    def test_0012_create(self):
+        self.log.debug("I want to create an object (json)")
+        headers = {"Content-Type": "application/json; charset=UTF-8", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.data_api_url + "classes/testclass/"
+        data = {"testNumber": 1234, "testDescription": "This is a decription. (json)", "testExtra": "Extra testing field... (json)" }
+        params = {}
+        ret = requests.post(url, params=params, data=data, headers=headers)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        self.tmp_test_data["id_created"] = responseObj["id"]
+        self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
+        self.assertTrue("id" in responseObj)
+        
     # Test for getting data from db...
     def test_002_get(self):
         self.log.debug("I want to get an object")

@@ -77,6 +77,22 @@ class MailApiTestCase(unittest.TestCase):
         # for testing general exception handling (you should uncomment raw response from api also)
         #ret = requests.post(url, params=params, data = json.dumps(data) + "xxx", headers=headers)
         ret = requests.post(url, params=params, data = json.dumps(data), headers=headers)
+        self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertEquals(1, responseObj["sent"]) 
+        
+        # Test sending email...
+    def test_002_sendmail(self):
+        self.log.debug("I want to make a POST request with HTML code and send a mail (json)")
+        headers = {"Content-Type": "application/json; charset=UTF-8", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        data = { "from": "test@voolks.com", "to": "maiorano@gmail.com", "subject": "Testing", "html": "<html><b>Testing email (json)</b></html>" }
+        params={}
+        url = self.mail_api_url + "sendmail/"
+        # for testing general exception handling (you should uncomment raw response from api also)
+        #ret = requests.post(url, params=params, data = json.dumps(data) + "xxx", headers=headers)
+        # ret = requests.post(url, params=params, data = json.dumps(data), headers=headers)
+        ret = requests.post(url, params=params, data = data, headers=headers)
         #self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
