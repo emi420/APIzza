@@ -89,6 +89,34 @@ class AuthApiTestCase(unittest.TestCase):
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("id" in responseObj)
 
+     # Test user creation (user=test99911&password=test99911)...
+    def test_00012_create(self):
+        self.log.debug("I want to create a user (post)")
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "signup/"
+        data = {"username": self.test_username+"1", "password": self.test_password+"1"}
+        params = {}
+        ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        self.tmp_test_data["id_created"] = responseObj["id"]
+        #self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
+        self.assertTrue("id" in responseObj)
+    
+    # Test user creation (user=test99912&password=test99912)...
+    def test_00013_create(self):
+        self.log.debug("I want to create a user (post/json)")
+        headers = {"Content-Type": "application/json; charset=UTF-8", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "signup/"
+        data = {"username": self.test_username+"2", "password": self.test_password+"2"}
+        params = {}
+        ret = requests.post(url, params=params, data=data, headers=headers)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        self.tmp_test_data["id_created"] = responseObj["id"]
+        #self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
+        self.assertTrue("id" in responseObj)
+    
     # Test authentication/login...
     def test_0010_login(self):
         #self.log.debug("I want to login as test with password test")
@@ -124,6 +152,20 @@ class AuthApiTestCase(unittest.TestCase):
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("code" in responseObj and responseObj["code"] == 1)
 
+     # Test permissions creation...
+    def test_0021_create_permission(self):
+        self.log.debug("I want to create user permissions for an object (json)")
+        headers = {"Content-Type": "application/json; charset=UTF-8", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "permissions/"
+        # data = { self.test_object: { self.tmp_test_data["session_userid"]: { "read": "true", "write": "true" }, "*": { "read": "true", "write": "false" } } }
+        data = "kk17er39tmxs0pfawmym8ly9bgpavfnb%5B11%5D%5Bread%5D=true&kk17er39tmxs0pfawmym8ly9bgpavfnb%5B11%5D%5Bwrite%5D=true&kk17er39tmxs0pfawmym8ly9bgpavfnb%5B*%5D%5Bread%5D=false&kk17er39tmxs0pfawmym8ly9bgpavfnb%5B*%5D%5Bwrite%5D=false"
+        params = {}
+        ret = requests.post(url, params=params, data=data, headers=headers)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("code" in responseObj and responseObj["code"] == 1)   
+        
     # Test permissions updating...
     def test_0030_update_permission(self):
         self.log.debug("I want to update user permissions for an object")

@@ -1,4 +1,5 @@
 import json
+import urllib
 from decorators import HttpOptionsDecorator, VoolksAPIAuthRequired
 from django.http import HttpResponse
 from django.contrib.auth.models import User
@@ -25,9 +26,30 @@ def signup(request):
 
    (app, key) = get_api_credentials(request)
    
-   username = request.GET.get('username','')
-   password = request.GET.get('password','')
-            
+   request_post = request.META["REQUEST_METHOD"] == "POST"
+   request_content_type_json = request.META["CONTENT_TYPE"] == "application/json; charset=UTF-8"
+   
+   if request_post:
+        if request_content_type_json:
+            data = "{"
+            params = dict([p.split('=') for p in request.body.split('&')])
+            for key in params: 
+                data = data + '"' + key + '":"' +params[key] + '",'
+            data = data + "}"
+            data = data.replace(",}","}")
+            parsed_data = json.loads(data)
+            username = parsed_data["username"]
+            password = parsed_data["password"]
+        else:
+            data = request.POST.items()[0][0]
+            parsed_data = json.loads(data)
+            username = parsed_data["username"]
+            password = parsed_data["password"]
+                       
+   else:
+        username = request.GET.get('username','')
+        password = request.GET.get('password','')
+       
    # Error codes if missing data
 
    if username == '':
@@ -168,12 +190,22 @@ def permissions(request):
             data = []
             if request.META["REQUEST_METHOD"] == "POST":
                 if request_content_type_json:
-                    data = "{"
-                    params = dict([p.split('=') for p in request.body.split('&')])
-                    for key in params: 
-                        data = data + '"' + key + '":"' +params[key] + '",'
-                    data = data + "}"
-                    data = data.replace(",}","}")
+                    decode = urllib.unquote(request.body)
+                    decode = decode.replace("[","|")
+                    decode = decode.replace("]","|")
+                    decode = decode.replace("=","")
+                    sp = decode.split('&')
+                    sp0 = sp[0].split('|')
+                    sp1 = sp[1].split('|')
+                    sp2 = sp[2].split('|')
+                    sp3 = sp[3].split('|')
+                    
+                    data = '{'
+                    data = data + '"' + sp0[0] + '":{'
+                    data = data + '"' + sp0[1] + '":{' + '"' + sp0[3] + '":' + '"' + sp0[4] + '",' + '"' + sp1[3] + '":' + '"' + sp1[4] + '"' + '},'
+                    data = data + '"' + sp3[1] + '":{' + '"' + sp2[3] + '":' + '"' + sp2[4] + '",' + '"' + sp3[3] + '":' + '"' + sp3[4] + '"' + '}'
+                    data = data + '}'
+                    data = data + '}'
                 else:
                     data = request.POST.items()[0][0]
             else:
