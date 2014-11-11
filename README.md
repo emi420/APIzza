@@ -9,17 +9,19 @@ APIzza is a REST API organized in different modules, each one is a separate appl
 * **Auth.api** users
 * **Data.api** data objetcs
 * **File.api** file objects
+* **Mail.api** e-mai services
+* **Pdf.api** generate pdf files from html code
 * **Shared.api** shared utilities for all modules
 
 ## Angular module
 
-* **js.api** Angular module API.services 
+* **js.api** Angular module API.services (in development)
 
 ## Installation
 
 1.Clone this project on your system
 
-2.Install virtualenv and pip
+2.Install virtualenv, pip and mongodb
 
 3.Install pip requeriments on project virtualenv:
 
