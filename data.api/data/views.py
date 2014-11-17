@@ -11,8 +11,8 @@ DATABASE_NAME = "test"
 
 # xxx
 # For checking for specific permission when no session is provided
-CHK_SP_PERM_AUTH_USER = "test"
-CHK_SP_PERM_AUTH_PASSWORD = "test"
+CHK_SP_PERM_AUTH_USER = "validate_data_api"
+CHK_SP_PERM_AUTH_PASSWORD = "validate_data_api_123"
 
 
 def get_api_credentials(request):

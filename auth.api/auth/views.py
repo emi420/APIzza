@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.contrib.sessions.backends.db import SessionStore
 from auth.models import AuthPermission
-
+import re
 
 def get_api_credentials(request):
     ''' Get app id and api key '''
@@ -33,8 +33,8 @@ def signup(request):
         if request_content_type_json:
             data = "{"
             params = dict([p.split('=') for p in request.body.split('&')])
-            for key in params: 
-                data = data + '"' + key + '":"' +params[key] + '",'
+            for key2 in params: 
+                data = data + '"' + key2 + '":"' +params[key2] + '",'
             data = data + "}"
             data = data.replace(",}","}")
             parsed_data = json.loads(data)
@@ -63,37 +63,63 @@ def signup(request):
       return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
 
    else:
-
-     # Create user
       
-     #user = User.objects.create_user(username, username, password)
-     user = User.objects.create_user(app + "-" + key + "-" + username, username, password)
+      lenPassword = len(str(password))
+     
+      # Error codes if missing data 
 
-     if user is not None:
-
-         # Save session
-         
-         s = SessionStore()
-         s['ip_address'] = request.META['REMOTE_ADDR'] 
-         s['id'] = user.pk
-         s.save()
-         session_id = s.session_key
-
-         # Build response
-         
-         response['sessionId'] = session_id
-         response['username'] = user.username
-         response['id'] = user.pk
-
+      try:
+         userExists = User.objects.get(username=app + "-" + key + "-" + username)
+         response['code'] = 62
+         response['text'] = "Username exists"
          return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
-
-     else:
-
-         # Can't create user
-         
-         response['code'] = 56
-         response['text'] = "Can't create user"
+      except:
+         userExists = ''
+            
+      if lenPassword < 8:
+         response['code'] = 59
+         response['text'] = "Password too short"
          return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+      elif not re.search('[0-9]+', str(password)):
+         response['code'] = 60
+         response['text'] = "Password must contain at least one number"
+         return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+      elif not re.search('[a-zA-Z]+', str(password)):
+         response['code'] = 61
+         response['text'] = "Password must contain at least one letter"
+         return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+      else:
+
+         # Create user
+          
+         #user = User.objects.create_user(username, username, password)
+         user = User.objects.create_user(app + "-" + key + "-" + username, username, password)
+
+         if user is not None:
+
+             # Save session
+             
+             s = SessionStore()
+             s['ip_address'] = request.META['REMOTE_ADDR'] 
+             s['id'] = user.pk
+             s.save()
+             session_id = s.session_key
+
+             # Build response
+             
+             response['sessionId'] = session_id
+             response['username'] = user.username
+             response['id'] = user.pk
+
+             return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+
+         else:
+
+             # Can't create user
+             
+             response['code'] = 56
+             response['text'] = "Can't create user"
+             return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
 
 
 
@@ -238,6 +264,7 @@ def permissions(request):
                 response['code'] = 1
             else:
                 response['code'] = 0
+                #response['debug'] = str(s['id']) + " != " + db_user
 
         # Get permissions for object
         elif request.META["REQUEST_METHOD"] == "GET":

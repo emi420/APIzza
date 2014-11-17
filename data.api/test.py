@@ -44,7 +44,43 @@ class DataApiTestCase(unittest.TestCase):
         self.log_handler.setLevel(logging.DEBUG)
         self.log.addHandler(self.log_handler)
         self.log.setLevel(logging.DEBUG)
+        
+        # Set up usernames/passwors needed by data.api and following tests
 
+        # try create user name for data.api views validations
+        url = self.auth_api_url + "signup/?username=" + "validate_data_api" + "&password=" + "validate_data_api_123"
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        
+        # create (or login) user for testing (test_data_api / test_data_api)
+        tmp_user = "test_data_api"
+        url = self.auth_api_url + "signup/?username=" + tmp_user + "&password=" + tmp_user + "1"
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        if "sessionId" in responseObj:
+            self.tmp_test_data["session_sessionid"] = responseObj["sessionId"]
+            self.tmp_test_data["session_userid"] = responseObj["id"]
+        else:
+            url = self.auth_api_url + "login/?username=" + tmp_user + "&password=" + tmp_user + "1"
+            ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+            responseObj2 =  json.loads(ret.text)
+            self.tmp_test_data["session_sessionid"] = responseObj2["sessionId"]
+            self.tmp_test_data["session_userid"] = responseObj2["id"]
+
+        # create (or login) second user for testing (test_data_api2 / test_data_api2)
+        tmp_user = "test_data_api2"
+        url = self.auth_api_url + "signup/?username=" + tmp_user + "&password=" + tmp_user + "1"
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        responseObj =  json.loads(ret.text)
+        if "sessionId" in responseObj:
+            self.tmp_test_data["session_sessionid_test2"] = responseObj["sessionId"]
+            self.tmp_test_data["session_userid_test2"] = responseObj["id"]
+        else:
+            url = self.auth_api_url + "login/?username=" + tmp_user + "&password=" + tmp_user + "1"
+            ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+            responseObj2 =  json.loads(ret.text)
+            self.tmp_test_data["session_sessionid_test2"] = responseObj2["sessionId"]
+            self.tmp_test_data["session_userid_test2"] = responseObj2["id"]
+        
         self.log.debug("General setup done.")
 
     # Tear down called when all tests are done
@@ -97,8 +133,8 @@ class DataApiTestCase(unittest.TestCase):
         ret = requests.post(url, params=params, data=data, headers=headers)
         #self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
-        self.tmp_test_data["id_created"] = responseObj["id"]
-        self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
+        self.tmp_test_data["id_created_2"] = responseObj["id"]
+        #self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
         self.assertTrue("id" in responseObj)
         
     # Test for getting data from db...
@@ -128,6 +164,7 @@ class DataApiTestCase(unittest.TestCase):
         data = {"testNumber": 321, "testDescription": "This is a description.", "testExtra": "Extra testing field..." }
         params = {}
         ret = requests.put(url, params=params, data=json.dumps(data), headers=headers)
+        #self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("updatedAt" in responseObj and "testNumber" in responseObj and responseObj["testNumber"] == 321)
@@ -137,6 +174,7 @@ class DataApiTestCase(unittest.TestCase):
         self.log.debug("I want to filter all objects using a where parameter")
         url = self.data_api_url + "classes/testclass/?where=" + """{"testNumber":321}"""
         ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        #self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("testNumber" in responseObj["result"][0] and responseObj["result"][0]["testNumber"] == 321)
@@ -167,7 +205,7 @@ class DataApiTestCase(unittest.TestCase):
         # we create another object with same test number for testing...
         headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
         url = self.data_api_url + "classes/testclass/"
-        data = {"testNumber": 321, "testDescription": "This is a decription for 999.", "testExtra": "Extra testing field 999..." }
+        data = {"testNumber": 321, "testDescription": "This is a decription for another test object (999).", "testExtra": "Extra testing field..." }
         params = {}
         ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
         
@@ -209,15 +247,7 @@ class DataApiTestCase(unittest.TestCase):
 
     # Test for setting permissions for object
     def test_101_permissions_set(self):
-        self.log.debug("I want to set permissions for object (first login as test with password test)")
-        
-        # login with test/test...
-        url = self.auth_api_url + "login/?username=test&password=test"
-        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
-        responseObj =  json.loads(ret.text)
-        self.tmp_test_data["session_sessionid"] = responseObj["sessionId"]
-        self.tmp_test_data["session_userid"] = responseObj["id"]
-
+        self.log.debug("I want to set permissions for object")
         # set permissions for object...
         headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
         url = self.auth_api_url + "permissions/"
@@ -226,7 +256,6 @@ class DataApiTestCase(unittest.TestCase):
         ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
         #self.log.debug("Raw response from api: " + ret.text)
         responseObj2 =  json.loads(ret.text)
-
         self.assertTrue("code" in responseObj2 and responseObj2["code"] == 1)
 
     # Test for getting object (no data expected, asking for object with permissions, without session)
@@ -251,15 +280,7 @@ class DataApiTestCase(unittest.TestCase):
 
     # Test for getting object (asking for object with permissions with another session)
     def test_104_permissions_test_nok(self):
-        self.log.debug("I want to get no data when asking for object with permissions, with other user session (first login as test2 with password test2)")
-        
-        # login with test2/test2...
-        url = self.auth_api_url + "login/?username=test2&password=test2"
-        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
-        responseObj =  json.loads(ret.text)
-        self.tmp_test_data["session_sessionid_test2"] = responseObj["sessionId"]
-        self.tmp_test_data["session_userid_test2"] = responseObj["id"]
-
+        self.log.debug("I want to get no data when asking for object with permissions, with other user session")
         # try to get object...
         url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
         ret = requests.get(url, headers={'X-Voolks-Session-Id': self.tmp_test_data["session_sessionid_test2"], 'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
