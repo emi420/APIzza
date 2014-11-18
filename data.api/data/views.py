@@ -243,7 +243,7 @@ def classes_get_one(request, class_name, obj_id):
             tmp_session_sessionid = tmp_session["sessionId"]
             tmp_session_userid = tmp_session["id"]
             obj_perm = get_object_permissions(tmp_session_sessionid, app, key, obj_id)
-            if obj_perm["code"] == 1:
+            if obj_perm["code"] == 1 or obj_perm["code"] == 500:
                 return HttpResponse(json.dumps({"error":"Permission denied.","code":"45"}) + "\n", content_type="application/json")
 
         else:
