@@ -44,7 +44,10 @@ def classes(request, class_name):
     result = []
     request_delete = request.META["REQUEST_METHOD"] == "DELETE"
     request_post = request.META["REQUEST_METHOD"] == "POST"
-    request_content_type_json = request.META["CONTENT_TYPE"] == "application/json; charset=UTF-8"
+    try:
+        request_content_type_json = request.META["CONTENT_TYPE"] == "application/json; charset=UTF-8"
+    except:
+        request_content_type_json = False
     queryIsList = False
     
     if request_post:
@@ -53,8 +56,8 @@ def classes(request, class_name):
         if request_content_type_json:
             data = "{"
             params = dict([p.split('=') for p in request.body.split('&')])
-            for key in params: 
-                data = data + '"' + key + '":"' +params[key] + '",'
+            for key2 in params: 
+                data = data + '"' + key2 + '":"' +params[key2] + '",'
             data = data + "}"
             data = data.replace(",}","}")
         else:

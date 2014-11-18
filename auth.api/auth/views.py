@@ -27,7 +27,10 @@ def signup(request):
    (app, key) = get_api_credentials(request)
    
    request_post = request.META["REQUEST_METHOD"] == "POST"
-   request_content_type_json = request.META["CONTENT_TYPE"] == "application/json; charset=UTF-8"
+   try:
+        request_content_type_json = request.META["CONTENT_TYPE"] == "application/json; charset=UTF-8"
+   except:
+        request_content_type_json = False
    
    if request_post:
         if request_content_type_json:
@@ -206,7 +209,10 @@ def permissions(request):
     response = {}
 
     session_id = request.META.get('HTTP_X_VOOLKS_SESSION_ID')
-    request_content_type_json = request.META["CONTENT_TYPE"] == "application/json; charset=UTF-8"
+    try:
+        request_content_type_json = request.META["CONTENT_TYPE"] == "application/json; charset=UTF-8"
+    except:
+        request_content_type_json = False
     s = SessionStore(session_key=session_id)
 
     # Check for valid session
