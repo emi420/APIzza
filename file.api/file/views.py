@@ -40,8 +40,8 @@ def get(request, name):
         if mimeType == (None,None):
                mimeType = "text/plain"
         return HttpResponse(fileContent,  content_type=mimeType)
-    except Exception as e:
-        return HttpResponse(str(e))
+    except:
+        return HttpResponse("FILE NOT FOUND")
 
 @csrf_exempt
 @HttpOptionsDecorator
@@ -79,27 +79,31 @@ def create(request):
         dest.close()
         return HttpResponseRedirect("/" + file.name + "?VoolksAppId=" + app + "&VoolksApiKey=" + key) 
 
-
-
 @csrf_exempt
 @HttpOptionsDecorator
 @VoolksAPIAuthRequired
 def createBase64(request):
     
     (app, key) = get_api_credentials(request)
-    
+
     #import pdb; pdb.set_trace();
-    
-    
+
     if len(request.POST) < 1:
         return HttpResponse("NO_FILES_FOUND")
     else:
         fileKey = request.POST.keys()[0]
+
         filename = fileKey
-        path = settings.MEDIA_ROOT + app + "-" + key + "-" + filename + ".jpg"
+        path = settings.MEDIA_ROOT + app + "-" + key + "-" + filename
         dest = open(path, 'w+')
-        dest.write(request.POST[fileKey][22:].decode('base64'))
+        
+        try:
+            dest.write(request.POST[fileKey][22:].decode('base64'))
+        except:
+            dest.write(request.POST[fileKey].decode('base64'))
+
         dest.close()
-        return HttpResponse(filename + ".jpg")
+        #return HttpResponse("OK")
+        return HttpResponse(filename)
 
     return HttpResponse("ERROR")

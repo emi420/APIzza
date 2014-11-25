@@ -89,7 +89,7 @@ class FileApiTestCase(unittest.TestCase):
         params={}
         ret = requests.post(self.file_api_url  + "createBase64/", params=params, data=data, headers=headers)
         #self.log.debug("Raw response from api: " + ret.text)
-        self.assertTrue(ret.text == 'OK')
+        self.assertTrue(ret.text == self.test_file)
         
     # Test to get file...
     def test_003_get(self):
