@@ -19,7 +19,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 MEDIA_ROOT = '/CHANGEME/CHANGEME/'
 MEDIA_URL = 'https://CHANGEME.CHANGEME/CHANGEME/'
-
+MEDIA_MAX_FILE_SIZE = 2 * 1024 * 1024 # in bytes
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/

@@ -68,6 +68,11 @@ def create(request):
     else:
         fileKey = request.FILES.keys()[0]
         file = request.FILES[fileKey]
+
+        # Check file size
+        if file.size > settings.MEDIA_MAX_FILE_SIZE:
+            return HttpResponse("FILE_SIZE_EXCEEDED")
+
         path = settings.MEDIA_ROOT + app + "-" + key + "-" + file.name
         dest = open(path, 'w+')
 
@@ -93,6 +98,10 @@ def createBase64(request):
     else:
         fileKey = request.POST.keys()[0]
 
+        # Check file size
+        if len(request.POST[fileKey]) > settings.MEDIA_MAX_FILE_SIZE:
+            return HttpResponse("FILE_SIZE_EXCEEDED")
+        
         filename = fileKey
         path = settings.MEDIA_ROOT + app + "-" + key + "-" + filename
         dest = open(path, 'w+')

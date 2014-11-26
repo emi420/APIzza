@@ -76,16 +76,16 @@ class FileApiTestCase(unittest.TestCase):
         self.log.debug("I want to create a file from a multipart/form-data POST request")
         #headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
         headers = {"X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
-        files = {'file': (self.test_file, 'Test file content...\n')}
+        files = {'file': (self.test_file, 'Test file content...')}
         ret = requests.post(self.file_api_url  + "create/", files=files, headers=headers)
         #self.log.debug("Raw response from api: " + ret.text)
-        self.assertTrue(ret.text != 'NO_FILES_FOUND')
+        self.assertTrue(ret.text == 'Test file content...')
 
     # Test creation of file #2...
     def test_002_create_2(self):
         self.log.debug("I want to create a file from a base64 string")
         headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
-        data = { self.test_file : base64.b64encode('Test file content...\n')}
+        data = { self.test_file : base64.b64encode('Test file content...')}
         params={}
         ret = requests.post(self.file_api_url  + "createBase64/", params=params, data=data, headers=headers)
         #self.log.debug("Raw response from api: " + ret.text)
