@@ -90,9 +90,19 @@ class FileApiTestCase(unittest.TestCase):
         ret = requests.post(self.file_api_url  + "createBase64/", params=params, data=data, headers=headers)
         #self.log.debug("Raw response from api: " + ret.text)
         self.assertTrue(ret.text == self.test_file)
+
+    # Test creation of file #3...
+    def test_003_create_1(self):
+        self.log.debug("I want to create a file from a multipart/form-data POST request (invalida file extension)")
+        #headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        headers = {"X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        files = {'file': (self.test_file + ".xxx", 'Test file content...')}
+        ret = requests.post(self.file_api_url  + "create/", files=files, headers=headers)
+        self.log.debug("Raw response from api: " + ret.text)
+        self.assertTrue(ret.text == 'FILE_EXTENSION_NOT_PERMITTED')
         
     # Test to get file...
-    def test_003_get(self):
+    def test_004_get(self):
         self.log.debug("I want to get a file")
         url = self.file_api_url + self.test_file + "/"
         ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
@@ -100,7 +110,7 @@ class FileApiTestCase(unittest.TestCase):
         self.assertTrue(ret.text != 'FILE NOT FOUND')
 
     # Test deletion of a file...
-    def test_004_delete(self):
+    def test_005_delete(self):
         self.log.debug("I want to delete a file")
         url = self.file_api_url + "delete/" + self.test_file + "/"
         ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)

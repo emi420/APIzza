@@ -73,6 +73,10 @@ def create(request):
         if file.size > settings.MEDIA_MAX_FILE_SIZE:
             return HttpResponse("FILE_SIZE_EXCEEDED")
 
+        # Check file extension
+        if file.name.split(".")[-1].lower() not in settings.MEDIA_PERMITTED_EXTENSIONS:
+            return HttpResponse("FILE_EXTENSION_NOT_PERMITTED")
+
         path = settings.MEDIA_ROOT + app + "-" + key + "-" + file.name
         dest = open(path, 'w+')
 
@@ -103,6 +107,11 @@ def createBase64(request):
             return HttpResponse("FILE_SIZE_EXCEEDED")
         
         filename = fileKey
+
+        # Check file extension
+        if filename.split(".")[-1].lower() not in settings.MEDIA_PERMITTED_EXTENSIONS:
+            return HttpResponse("FILE_EXTENSION_NOT_PERMITTED")
+
         path = settings.MEDIA_ROOT + app + "-" + key + "-" + filename
         dest = open(path, 'w+')
         
