@@ -336,6 +336,22 @@ class DataApiTestCase(unittest.TestCase):
 
     ###########################################################################
 
+    # Test creation of class on db (invalid field names)...
+    def test_201_create(self):
+        self.log.debug("I want to create an object (test for error; invalid field names)")
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.data_api_url + "classes/testclass/"
+        # test: invalid space in property "test Extra"
+        data = {"testNumber": 444, "testDescription": "This is a decription.", "test Extra": "Extra testing field..." }
+        params = {}
+        ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
+        self.assertTrue("code" in responseObj and responseObj["code"] == "61")
+
+    ###########################################################################
+    
     # Test for deleting an object
     def test_995_delete(self):
         self.log.debug("I want to delete an object")

@@ -5,6 +5,8 @@ from pymongo import Connection
 from bson.objectid import ObjectId
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
+import re
+
 
 USER_SESSION_URL = "http://localhost:8000/"
 DATABASE_NAME = "test"
@@ -73,6 +75,12 @@ def classes(request, class_name):
         except:
             return HttpResponse(json.dumps({"error":"Invalid JSON","code":"533"}) + "\n", content_type="application/json")
         '''
+
+        # Validate field names (only letters, numbers and underscores are permitted)
+        for tmp_field_name in parsed_data.keys():
+            if not re.match("^[a-zA-Z0-9_]*$", tmp_field_name):
+                return HttpResponse(json.dumps({"error":"Invalid field name","code":"61"}) + "\n", content_type="application/json")
+
         parsed_data['createdAt'] = str(datetime.now())
         obj = instance.insert(parsed_data)
         response['id'] = str(obj)
