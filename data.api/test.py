@@ -131,7 +131,7 @@ class DataApiTestCase(unittest.TestCase):
         data = {"testNumber": 1234, "testDescription": "This is a decription. (json)", "testExtra": "Extra testing field... (json)" }
         params = {}
         ret = requests.post(url, params=params, data=data, headers=headers)
-        #self.log.debug("Raw response from api: " + ret.text)
+        # self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         self.tmp_test_data["id_created_2"] = responseObj["id"]
         #self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
@@ -142,7 +142,7 @@ class DataApiTestCase(unittest.TestCase):
         self.log.debug("I want to get an object")
         url = self.data_api_url + "classes/testclass/" + self.tmp_test_data["id_created"] + "/"
         ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
-        #self.log.debug("Raw response from api: " + ret.text)
+        # self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("testNumber" in responseObj and responseObj["testNumber"] == 123)
@@ -174,10 +174,30 @@ class DataApiTestCase(unittest.TestCase):
         self.log.debug("I want to filter all objects using a where parameter")
         url = self.data_api_url + "classes/testclass/?where=" + """{"testNumber":321}"""
         ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
-        #self.log.debug("Raw response from api: " + ret.text)
+        # self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("testNumber" in responseObj["result"][0] and responseObj["result"][0]["testNumber"] == 321)
+        
+    # Test for filtering objects
+    def test_0071_filter(self):
+        self.log.debug("I want to filter all objects using a where parameter (id)")
+        url = self.data_api_url + "classes/testclass/?where=" + """{"_id":"""+'"'+self.tmp_test_data["id_created"]+'"'+"""}"""
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testNumber" in responseObj["result"][0])        
+
+    # Test for filtering objects
+    def test_0072_filter(self):
+        self.log.debug("I want to filter all objects using a where parameter (ids)")
+        url = self.data_api_url + "classes/testclass/?where=" + """{"_id":{"""+'"$in"'+""":["""+'"'+self.tmp_test_data["id_created"]+'"'+""","""+'"'+self.tmp_test_data["id_created_2"]+'"'+"""]}}"""
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testNumber" in responseObj["result"][0])   
         
     # Test for filtering objects (reg. ex.)
     def test_008_filter_regex(self):
@@ -189,14 +209,15 @@ class DataApiTestCase(unittest.TestCase):
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("testNumber" in responseObj["result"][0] and responseObj["result"][0]["testNumber"] == 321)
         
-    # Test for getting only some properties
-    def test_009_projections(self):
-        self.log.debug("I want to get only some properties on the response objects (projections)")
-        url = self.data_api_url + "classes/testclass/?where=" + """[{"testNumber":321},{"testDescription":1}]"""
-        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
-        responseObj =  json.loads(ret.text)
-        #self.log.debug("Response from api: " + json.dumps(responseObj))
-        self.assertTrue("testDescription" in responseObj["result"][0] and not "testExtra" in responseObj["result"][0])
+    # # Test for getting only some properties
+    # def test_009_projections(self):
+        # self.log.debug("I want to get only some properties on the response objects (projections)")
+        # url = self.data_api_url + "classes/testclass/?where=" + """[{"testNumber":321},{"testDescription":1}]"""
+        # ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        # self.log.debug("Raw response from api: " + ret.text)
+        # responseObj =  json.loads(ret.text)
+        # #self.log.debug("Response from api: " + json.dumps(responseObj))
+        # self.assertTrue("testDescription" in responseObj["result"][0] and not "testExtra" in responseObj["result"][0])
 
     # Test for limiting query
     def test_010_limit(self):

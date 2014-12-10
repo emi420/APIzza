@@ -92,11 +92,20 @@ def classes(request, class_name):
         if "where" in request.GET:
             query = json.loads(request.GET["where"])
             if type(query) is dict:
+                if "_id" in query:       
+                    if type(query['_id']) is dict:
+                        if "$in" in query['_id']: 
+                            in_list = []
+                            for tmp_id in query['_id']['$in']:
+                                in_list.append(ObjectId(str(tmp_id)))
+                            query['_id']['$in'] = in_list
+                    else:
+                        query["_id"] = ObjectId(str(query["_id"]))
                 cur = instance.find(query)
             elif type(query) is list:
-                cur = instance.find(query[0],query[1]) 
                 query1 = query[1]
-                query = query[0]
+                query = query[0]                
+                cur = instance.find(query[0],query[1]) 
                 queryIsList = True      
 
         else:
