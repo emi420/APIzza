@@ -209,15 +209,15 @@ class DataApiTestCase(unittest.TestCase):
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("testNumber" in responseObj["result"][0] and responseObj["result"][0]["testNumber"] == 321)
         
-    # # Test for getting only some properties
-    # def test_009_projections(self):
-        # self.log.debug("I want to get only some properties on the response objects (projections)")
-        # url = self.data_api_url + "classes/testclass/?where=" + """[{"testNumber":321},{"testDescription":1}]"""
-        # ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+    # Test for getting only some properties
+    def test_009_projections(self):
+        self.log.debug("I want to get only some properties on the response objects (projections)")
+        url = self.data_api_url + "classes/testclass/?where=" + """[{"testNumber":321},{"testDescription":1}]"""
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
         # self.log.debug("Raw response from api: " + ret.text)
-        # responseObj =  json.loads(ret.text)
-        # #self.log.debug("Response from api: " + json.dumps(responseObj))
-        # self.assertTrue("testDescription" in responseObj["result"][0] and not "testExtra" in responseObj["result"][0])
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("testDescription" in responseObj["result"][0] and not "testExtra" in responseObj["result"][0])
 
     # Test for limiting query
     def test_010_limit(self):

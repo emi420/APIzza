@@ -103,10 +103,11 @@ def classes(request, class_name):
                         query["_id"] = ObjectId(str(query["_id"]))
                 cur = instance.find(query)
             elif type(query) is list:
-                query1 = query[1]
-                query = query[0]                
                 cur = instance.find(query[0],query[1]) 
-                queryIsList = True      
+                query1 = query[1]
+                query = query[0]
+
+                queryIsList = True   
 
         else:
             query = {}
