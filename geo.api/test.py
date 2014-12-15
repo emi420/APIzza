@@ -14,6 +14,8 @@ API_APP_ID = "1"
 API_APP_KEY = "1234"
 LONGITUDE = 1
 LATITUDE = 2
+MAXDISTANCE = 3
+MINDISTANCE = 4
 
 ###########################################################################
 # GEO.API TEST CASE
@@ -80,7 +82,7 @@ class GeoApiTestCase(unittest.TestCase):
         # self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         self.log.debug("Response from api: " + json.dumps(responseObj))
-        # self.assertTrue("id" in responseObj)
+        self.assertTrue("id" in responseObj)
         
     # Test creation geolocation 
     def test_002_create(self):
@@ -93,4 +95,24 @@ class GeoApiTestCase(unittest.TestCase):
         # self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         self.log.debug("Response from api: " + json.dumps(responseObj))
-        # self.assertTrue("id" in responseObj)    
+        self.assertTrue("id" in responseObj)    
+
+    # Test get near geolocation 
+    def test_003_get_neargeo(self):
+        self.log.debug("I want to get near geolocation")
+        url = self.geo_api_url + "neargeo/?where=" + """{"myPosition":{"$near":{"$geometry":{"type":"Point", "coordinates": [""" + str(LONGITUDE) + """, """ + str(LATITUDE) + """]}, "$maxDistance": """ + str(MAXDISTANCE) + """, "$minDistance": """ + str(MINDISTANCE) + """}}}"""
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        # self.log.debug("Response from api: " + json.dumps(responseObj))
+        # self.assertTrue("id" in responseObj)
+
+    # Test get within geolocation 
+    def test_004_get_withingeo(self):
+        self.log.debug("I want to get within geolocation")
+        url = self.geo_api_url + "withingeo/?where=" + """{"myPosition":{"$geoWithin":{"$geometry":{"type":"Polygon", "coordinates": [[""" + str(LONGITUDE) + """, """ + str(LATITUDE) + """]]}}}}"""
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        # self.log.debug("Response from api: " + json.dumps(responseObj))
+        # self.assertTrue("id" in responseObj)

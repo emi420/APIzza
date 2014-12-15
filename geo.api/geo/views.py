@@ -1,14 +1,15 @@
 import requests
+import pymongo
 from decorators import HttpOptionsDecorator, VoolksAPIAuthRequired
 from django.http import HttpResponse, HttpResponseRedirect
-from pymongo import Connection
+from pymongo import Connection, GEOSPHERE, GEO2D
 import json
 from datetime import datetime
 import urllib
 import re
 
 DATABASE_NAME = "testgeo"
-INSTANCE_NAME = "testgeo1"
+INSTANCE_NAME = "testgeo2"
 
 @HttpOptionsDecorator
 @VoolksAPIAuthRequired
@@ -18,10 +19,9 @@ def savegeo(request):
     db = connection[DATABASE_NAME]    
     instance = db[INSTANCE_NAME]
     try:
-        instance.ensureIndex([("myPosition", pymongo.GEOSPHERE)])
-    except:
-        # XXX
-        x = 1
+        db.instance.ensure_index([("loc", pymongo.GEOSPHERE)])
+    except Exception as e:
+        return HttpResponse(json.dumps({"error":"Ensuring GEOSPHERE: " + type(e).__name__ + ": " + e.message, "code":"534"}) + "\n", content_type="application/json")
 
     request_post = request.META["REQUEST_METHOD"] == "POST"
     try:
@@ -67,4 +67,90 @@ def savegeo(request):
         response['id'] = str(obj)
             
     return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+
+@HttpOptionsDecorator
+@VoolksAPIAuthRequired
+def neargeo(request):
+    response = {}
+    connection = Connection()
+    db = connection[DATABASE_NAME]    
+    instance = db[INSTANCE_NAME]
+    cur = None
+    count = 0
+    result = []
+    try:
+        db.instance.ensure_index([("loc", pymongo.GEOSPHERE)])
+        db.instance.create_index([("loc", GEO2D)])
+    except Exception as e:
+        return HttpResponse(json.dumps({"error":"Ensuring GEOSPHERE: " + type(e).__name__ + ": " + e.message, "code":"534"}) + "\n", content_type="application/json")
         
+    # Get data
+
+    if "where" in request.GET:
+
+        # XXX example?
+        # query ={"loc": {"$near": [1, 2]}}
+        # query = {"loc":{"$near": {"$geometry": {"type": "Point", "coordinates": ["1", "2"]}, "$maxDistance": "3", "$minDistance": "4"}}}
+        query = json.loads(request.GET["where"])
+        cur = instance.find(query)
+
+    # Count     
+
+    if cur:
+        count = cur.count()
+        
+        # Response
+
+        for i in range(0, count):
+            obj = cur.next()
+            obj['id'] = str(obj['_id'])
+            del obj['_id']
+            result.append(obj)
+
+    if len(result) > 0:
+        response['result'] = result
+        
+    return HttpResponse(json.dumps(response) + "\n", content_type="application/json")        
+
+@HttpOptionsDecorator
+@VoolksAPIAuthRequired
+def withingeo(request):
+    response = {}
+    connection = Connection()
+    db = connection[DATABASE_NAME]    
+    instance = db[INSTANCE_NAME]
+    cur = None
+    count = 0
+    result = []
+    try:
+        instance.ensureIndex([("loc", pymongo.GEOSPHERE)])
+    except:
+        # XXX
+        x = 1  
+
+    # Get data
+
+    if "where" in request.GET:
+
+        # XXX example?
+        # query = {"loc":{"$geoWithin": {"$geometry": {"type": "Polygon", "coordinates": [["1", "2"]]}}}}
+        query = json.loads(request.GET["where"])
+        cur = instance.find(query)
+
+    # Count     
+
+    if cur:
+        count = cur.count()
+        
+        # Response
+
+        for i in range(0, count):
+            obj = cur.next()
+            obj['id'] = str(obj['_id'])
+            del obj['_id']
+            result.append(obj)
+
+    if len(result) > 0:
+        response['result'] = result
+        
+    return HttpResponse(json.dumps(response) + "\n", content_type="application/json")    
