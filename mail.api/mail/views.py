@@ -25,10 +25,7 @@ def sendmail(request):
 
     sessionid = request.META.get('HTTP_X_VOOLKS_SESSION_ID')
     (app, key) = get_api_credentials(request)
-    try:
-        request_content_type_json = request.META["CONTENT_TYPE"] == "application/json; charset=UTF-8"
-    except:
-        request_content_type_json = False
+    request_content_type_json = request.META.get('CONTENT_TYPE') == "application/json; charset=UTF-8"
     
     if request.method == "POST":
         if not sessionid:

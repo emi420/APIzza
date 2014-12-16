@@ -46,10 +46,7 @@ def classes(request, class_name):
     result = []
     request_delete = request.META["REQUEST_METHOD"] == "DELETE"
     request_post = request.META["REQUEST_METHOD"] == "POST"
-    try:
-        request_content_type_json = request.META["CONTENT_TYPE"] == "application/json; charset=UTF-8"
-    except:
-        request_content_type_json = False
+    request_content_type_json = request.META.get('CONTENT_TYPE') == "application/json; charset=UTF-8"
     queryIsList = False
     
     if request_post:
