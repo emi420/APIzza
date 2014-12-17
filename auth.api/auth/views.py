@@ -108,7 +108,7 @@ def signup(request):
              # Build response
              
              response['sessionId'] = session_id
-             response['username'] = user.username
+             response['username'] = user.username.replace(app + "-" + key + "-","")
              response['id'] = user.pk
 
              return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
@@ -166,7 +166,7 @@ def login(request):
          # Build response
          
          response['sessionId'] = session_id
-         response['username'] = user.username
+         response['username'] = user.username.replace(app + "-" + key + "-","")
          response['id'] = user.pk
 
          return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
