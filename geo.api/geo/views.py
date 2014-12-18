@@ -8,18 +8,18 @@ from datetime import datetime
 import urllib
 import re
 
-DATABASE_NAME = "testgeo"
-INSTANCE_NAME = "testgeo2"
+# DATABASE_NAME = "testgeo"
+# INSTANCE_NAME = "point"
 
 @HttpOptionsDecorator
 @VoolksAPIAuthRequired
 def savegeo(request):
     response = {}
-    connection = Connection()
-    db = connection[DATABASE_NAME]    
-    instance = db[INSTANCE_NAME]
+    db = Connection().testgeo
+    # XXX
+    # eval("db = Connection()."+DATABASE_NAME)  
     try:
-        db.instance.ensure_index([("loc", pymongo.GEOSPHERE)])
+        db.point.ensure_index([("myPosition", GEOSPHERE)]) 
     except Exception as e:
         return HttpResponse(json.dumps({"error":"Ensuring GEOSPHERE: " + type(e).__name__ + ": " + e.message, "code":"534"}) + "\n", content_type="application/json")
 
@@ -60,7 +60,7 @@ def savegeo(request):
             return HttpResponse(json.dumps({"error":"Invalid JSON","code":"533"}) + "\n", content_type="application/json")
         '''
         parsed_data['createdAt'] = str(datetime.now())
-        obj = instance.insert(parsed_data)
+        obj = db.point.insert(parsed_data)
         response['id'] = str(obj)
             
     return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
@@ -69,15 +69,12 @@ def savegeo(request):
 @VoolksAPIAuthRequired
 def neargeo(request):
     response = {}
-    connection = Connection()
-    db = connection[DATABASE_NAME]    
-    instance = db[INSTANCE_NAME]
+    db = Connection().testgeo
     cur = None
     count = 0
     result = []
     try:
-        db.instance.ensure_index([("loc", pymongo.GEOSPHERE)])
-        db.instance.create_index([("loc", GEO2D)])
+        db.point.ensure_index([("myPosition", GEOSPHERE)])
     except Exception as e:
         return HttpResponse(json.dumps({"error":"Ensuring GEOSPHERE: " + type(e).__name__ + ": " + e.message, "code":"534"}) + "\n", content_type="application/json")
         
@@ -85,11 +82,8 @@ def neargeo(request):
 
     if "where" in request.GET:
 
-        # XXX example?
-        # query ={"loc": {"$near": [1, 2]}}
-        # query = {"loc":{"$near": {"$geometry": {"type": "Point", "coordinates": ["1", "2"]}, "$maxDistance": "3", "$minDistance": "4"}}}
         query = json.loads(request.GET["where"])
-        cur = instance.find(query)
+        cur = db.point.find(query)
 
     # Count     
 
@@ -114,25 +108,21 @@ def neargeo(request):
 def withingeo(request):
     response = {}
     connection = Connection()
-    db = connection[DATABASE_NAME]    
-    instance = db[INSTANCE_NAME]
+    db = Connection().testgeo
     cur = None
     count = 0
     result = []
     try:
-        instance.ensureIndex([("loc", pymongo.GEOSPHERE)])
-    except:
-        # XXX
-        x = 1  
+        db.point.ensure_index([("myPosition", GEOSPHERE)])
+    except Exception as e:
+        return HttpResponse(json.dumps({"error":"Ensuring GEOSPHERE: " + type(e).__name__ + ": " + e.message, "code":"534"}) + "\n", content_type="application/json")
 
     # Get data
 
     if "where" in request.GET:
 
-        # XXX example?
-        # query = {"loc":{"$geoWithin": {"$geometry": {"type": "Polygon", "coordinates": [["1", "2"]]}}}}
         query = json.loads(request.GET["where"])
-        cur = instance.find(query)
+        cur = db.point.find(query)
 
     # Count     
 
