@@ -27,7 +27,7 @@ def xhtml2pdf(request):
 
     html_urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+/', htmlsrc)
     for html_url in html_urls:
-        if html_url.find(".voolks.com/") < 0 and html_url.find("/voolks.com/") < 0:
+        if html_url.find(".voolks.com/") < 0 and html_url.find("/voolks.com/") < 0 and html_url.find(".googleapis.com/") < 0:
             return HttpResponse(json.dumps({"error":"External URL not permitted: " + html_url,"code":"2"}) + "\n", content_type="application/json")
 
     html = render_to_string('blank.html', {'html': htmlsrc},
