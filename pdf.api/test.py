@@ -13,6 +13,12 @@ PDF_API_URL = "http://localhost:8005/"
 API_APP_ID = "1"
 API_APP_KEY = "1234"
 URL_FOR_TESTING = "http://www.w3schools.com/html/tryhtml_basic_document.htm"
+#XXX
+# URL_FOR_TESTING = "http://www7.m-sistemas.com.ar/voolks/api/XXX-PHP/encode_all_pdf_utf_8.html"
+#XXX
+# URL_FOR_TESTING = "http://www7.m-sistemas.com.ar/voolks/api/XXX-PHP/encode_all_pdf_ansi.html"
+#XXX
+# URL_FOR_TESTING = "http://www7.m-sistemas.com.ar/voolks/api/XXX-PHP/error_pdf.html"
 #xxx
 #URL_FOR_TESTING = "https://inspection.tnolen.com/report/html/542d92c2a00ebd0e2ee34fc0/"
 
@@ -104,11 +110,11 @@ class PdfApiTestCase(unittest.TestCase):
         self.log.debug("I want to send a POST request with HTML code and get an URL of a generated PDF file (with voolks images)")
         headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
         data = { requests.get(self.test_url, verify=False).text : ""}
-        imgs = "<br /><img src='https://www.voolks.com/img/logo_voolks_header.png' /><br /><img src='https://www.voolks.com/img/logo_voolks_header.png' /><br />"
+        imgs = "<br /><img src='https://voolks.com/img/logo_voolks_header.png' /><br /><img src='https://www.voolks.com/img/logo_voolks_header.png' /><br />"
         data = { requests.get(self.test_url, verify=False).text.replace("<body>", "<body>" + imgs) : ""}
         params={}
         ret = requests.post(self.pdf_api_url, params=params, data=data, headers=headers)
-        #self.log.debug("Raw response from api: " + ret.text)
+        self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("id" in responseObj)
