@@ -87,6 +87,15 @@ ROOT_URLCONF = 'mail.urls'
 # Python dotted path to the WSGI lication used by Django's runserver.
 WSGI_LICATION = 'mail.wsgi.lication'
 
+# Setting SMTP
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+# Gmail account
+EMAIL_HOST_USER = 'CHANGEME'
+# Gmail password
+EMAIL_HOST_PASSWORD = 'CHANGEME'
+
 INSTALLED_APPS = (
     #'django.contrib.auth',
     'django.contrib.contenttypes',

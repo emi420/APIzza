@@ -5,6 +5,8 @@ import json
 from django.core.mail import EmailMultiAlternatives
 from datetime import datetime
 from django.contrib.sessions.backends.db import SessionStore
+from mail import settings
+import urllib
 
 USER_SESSION_URL = "http://localhost:8000/"
 DATABASE_NAME = "test"
@@ -36,8 +38,9 @@ def sendmail(request):
                 return HttpResponse(json.dumps({"error":"Invalid session","code":"54"}) + "\n", content_type="application/json")
             else:
                 if request_content_type_json:
+                    decode = urllib.unquote(request.body)
                     data = "{"
-                    params = dict([p.split('=') for p in request.body.split('&')])
+                    params = dict([p.split('=') for p in decode.split('&')])
                     for key2 in params: 
                         data = data + '"' + key2 + '":"' +params[key2] + '",'
                     data = data + "}"
@@ -62,7 +65,7 @@ def sendmail(request):
                         s['mail_send_limit_time'] = totalsecondsNow
                         s.save()
                     
-                    msg = EmailMultiAlternatives(parsed_data["subject"], parsed_data["html"], parsed_data["from"], [parsed_data["to"]])
+                    msg = EmailMultiAlternatives(parsed_data["subject"], parsed_data["html"], settings.EMAIL_HOST_USER, [parsed_data["to"]])
                     msg.attach_alternative(parsed_data["html"], "text/html")
                     result = msg.send()	
                                         
