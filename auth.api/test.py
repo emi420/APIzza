@@ -16,6 +16,7 @@ API_APP_ID = "1"
 API_APP_KEY = "1234"
 TEST_USERNAME = "test9999"
 TEST_PASSWORD = "test9999"
+TEST_GROUP_NAME = "testgroup9999"
 TEST_OBJECT = "5412f6ca3c45889fbda30af1"
 
 ###########################################################################
@@ -36,6 +37,7 @@ class AuthApiTestCase(unittest.TestCase):
         self.app_key = API_APP_KEY
         self.test_username = TEST_USERNAME
         self.test_password = TEST_PASSWORD
+        self.test_group_name = TEST_GROUP_NAME
         self.test_object = TEST_OBJECT
         self.tmp_test_data = {}
         
@@ -116,7 +118,21 @@ class AuthApiTestCase(unittest.TestCase):
         self.tmp_test_data["id_created"] = responseObj["id"]
         #self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
         self.assertTrue("id" in responseObj)
-    
+     
+     # Test user creation (user=test99991&password=test99991)...
+    def test_00014_create(self):
+        self.log.debug("I want to create a user (post)")
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "signup/"
+        data = {"username": self.test_username+"3", "password": self.test_password+"3"}
+        params = {}
+        ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        self.tmp_test_data["id_created"] = responseObj["id"]
+        #self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
+        self.assertTrue("id" in responseObj)
+     
     # Test authentication/login...
     def test_0010_login(self):
         #self.log.debug("I want to login as test with password test")
@@ -138,6 +154,43 @@ class AuthApiTestCase(unittest.TestCase):
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("userid" in responseObj)
+
+    # Test group creation (name=testgroup)...
+    def test_001_create_group(self): 
+        self.log.debug("I want to create a group (post)")
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "group/"
+        data = {"name": self.test_group_name, "permissions": {"*": {"write": "true"}}}
+        params = {}
+        ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        self.tmp_test_data["id_group_created"] = responseObj["id"]
+        self.assertTrue("id" in responseObj)     
+    # Test group creation (name=testgroup1)...
+    def test_0012_create_group(self):
+        self.log.debug("I want to create a group (post/json)")
+        headers = {"Content-Type": "application/json; charset=UTF-8", "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "group/"
+        data = "name="+self.test_group_name+"1"+"&permissions%5B*%5D%5Bwrite%5D=true"
+        params = {}
+        ret = requests.post(url, params=params, data=data, headers=headers)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        self.tmp_test_data["id_group_created"] = responseObj["id"]
+        self.assertTrue("id" in responseObj)    
+    # Test add user to a group...
+    def test_001_add_users_to_group(self):
+        self.log.debug("I want to add users to a group")
+        headers = {"Content-Type": "application/x-www-form-urlencoded",  "X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"], "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        url = self.auth_api_url + "group/"+ self.tmp_test_data["id_group_created"] + "/"
+        data = {"users": [self.test_username]}
+        params = {}
+        ret = requests.put(url, params=params, data=json.dumps(data), headers=headers)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        # self.assertTrue("code" in responseObj and responseObj["code"] == 1)    
         
     # Test permissions creation...
     def test_0020_create_permission(self):
@@ -189,7 +242,7 @@ class AuthApiTestCase(unittest.TestCase):
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("code" in responseObj and responseObj["code"] == 1) # and self.tmp_test_data["session_userid"] in responseObj)
-
+        
     # Test permissions deletion...
     def test_0050_delete_permission(self):
         self.log.debug("I want to delete user permissions for an object")
@@ -200,7 +253,28 @@ class AuthApiTestCase(unittest.TestCase):
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("code" in responseObj and responseObj["code"] == 1)
-
+    
+    # Test reset password user...
+    def test_0700_reset(self):
+        self.log.debug("I want to reset password user")
+        url = self.auth_api_url + "reset_password/?username=" + self.test_username + "3"
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("newpassword" in responseObj)
+    
+    # Test change password user...
+    def test_0800_change(self):
+        self.log.debug("I want to change password user")
+        url = self.auth_api_url + "change_password/?username=" + self.test_username+"3" + "&password=" + self.test_password+"3" + "&newpassword=" + self.test_password+"4"
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        self.tmp_test_data["newpassword"] = responseObj["newpassword"]
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("newpassword" in responseObj)
+    
     # Test user deletion...
     def test_0900_delete(self):
         self.log.debug("I want to delete a user")
@@ -210,7 +284,7 @@ class AuthApiTestCase(unittest.TestCase):
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("code" in responseObj and responseObj["code"] == 1)
-        
+            
     # Test user deletion...
     def test_0901_delete(self):
         self.log.debug("I want to delete a user")
@@ -230,3 +304,33 @@ class AuthApiTestCase(unittest.TestCase):
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("code" in responseObj and responseObj["code"] == 1)      
+        
+    # Test user deletion...
+    def test_0903_delete(self):
+        self.log.debug("I want to delete a user")
+        url = self.auth_api_url + "delete/?username=" + self.test_username+"3" + "&password=" + self.tmp_test_data["newpassword"]
+        ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        #self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("code" in responseObj and responseObj["code"] == 1)          
+    
+    # Test group deletion...
+    def test_0900_delete_group(self):
+        self.log.debug("I want to delete a group")
+        url = self.auth_api_url + "group/?name=" + self.test_group_name
+        ret = requests.delete(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("code" in responseObj and responseObj["code"] == 1)    
+        
+    # Test group deletion...
+    def test_0901_delete_group(self):
+        self.log.debug("I want to delete a group")
+        url = self.auth_api_url + "group/?name=" + self.test_group_name + "1"
+        ret = requests.delete(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        #self.log.debug("Response from api: " + json.dumps(responseObj))
+        self.assertTrue("code" in responseObj and responseObj["code"] == 1)        

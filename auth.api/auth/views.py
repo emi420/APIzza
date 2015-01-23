@@ -2,11 +2,16 @@ import json
 import urllib
 from decorators import HttpOptionsDecorator, VoolksAPIAuthRequired
 from django.http import HttpResponse
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.auth import authenticate
 from django.contrib.sessions.backends.db import SessionStore
 from auth.models import AuthPermission
 import re
+import md5
+import random
+import string
+
+RESET_SECRET_KEY = "reset_secret_key"
 
 def get_api_credentials(request):
     ''' Get app id and api key '''
@@ -358,3 +363,223 @@ def delete(request):
             response['code'] = 46
             response['text'] = "Invalid username or password"
             return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+
+@HttpOptionsDecorator
+@VoolksAPIAuthRequired
+def group(request, groupobjid = ""):
+    ''' Create group '''
+    
+    response = {}
+    
+    (app, key) = get_api_credentials(request)
+
+    session_id = request.META.get('HTTP_X_VOOLKS_SESSION_ID')
+    request_content_type_json = request.META.get('CONTENT_TYPE') == "application/json; charset=UTF-8"
+    s = SessionStore(session_key=session_id)
+    
+    if request.META["REQUEST_METHOD"] == "POST" or request.META["REQUEST_METHOD"] == "PUT":
+        # Check for valid session
+        if 'id' in s:
+            # Create group with permissions
+            data = []
+            if request.META["REQUEST_METHOD"] == "POST":
+                if request_content_type_json:
+                    decode = urllib.unquote(request.body)
+                    decode = decode.replace("[","|")
+                    decode = decode.replace("]","|")
+                    decode = decode.replace("=","|")
+                    sp = decode.split('&')
+                    sp0 = sp[0].split('|')
+                    sp1 = sp[1].split('|')    
+                    data = '{'
+                    data = data + '"' + sp0[0] + '":"' + sp0[1] + '",'
+                    data = data + '"' + sp1[0] + '":{' + '"' + sp1[1] + '":{' '"' + sp1[3] + '":' + '"' + sp1[5] + '"' + '}' + '}'
+                    data = data + '}' 
+                else:
+                    data = request.POST.items()[0][0]
+                    
+                parsed_data = json.loads(data)
+                groupname = parsed_data["name"]  
+                permissions = parsed_data["permissions"]                     
+            
+                # Error codes if missing data
+            
+                if groupname == '':
+                  response['code'] = 52
+                  response['text'] = "Group name not provided"
+                  return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+                
+                # Create group
+                
+                db_objid = ""
+                try:
+                    objgroup = Group.objects.create(name=groupname)
+                    
+                    db_objid = str(objgroup.id)
+                    db_user = str(s['id'])
+                    db_user_permissions = json.dumps(permissions)
+                    db_other_permissions = ""
+                    AuthPermission.objects.create(objid=db_objid, user=db_user, user_permissions=db_user_permissions, other_permissions=db_other_permissions)
+                except:
+                    # Can't create group
+                    
+                    response['code'] = 53
+                    response['text'] = "Can't create group"
+                    return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+                    
+                # Build response
+                
+                response['id'] = db_objid
+                return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+                
+            if request.META["REQUEST_METHOD"] == "PUT":
+                # data = data = request.read()
+                data = request.body
+                parsed_data = json.loads(data)
+
+                # Error codes if missing data
+            
+                if groupobjid == '':
+                  response['code'] = 56
+                  response['text'] = "Group id not provided"
+                  return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+
+                objgroup = Group.objects.get(id=groupobjid)
+                users = parsed_data['users']
+
+                try:
+                    for db_user in users:
+                        objdb_user = User.objects.get(username=app + "-" + key + "-" + db_user)
+                        objdb_user.groups.add(objgroup)
+                except:
+                    # Can't add users to a group
+                    
+                    response['code'] = 57
+                    response['text'] = "Can't add users to a group"
+                    return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+                    
+                # Build response
+
+                response['code'] = 1
+                response['text'] = "Users add to a group"
+                return HttpResponse(json.dumps(response) + "\n", content_type="application/json")    
+                
+        else:
+            # Invalid Session      
+
+            response['code'] = 57
+            response['text'] = "Invalid Session"   
+            return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+            
+    if request.META["REQUEST_METHOD"] == "DELETE":
+        groupname = request.GET.get('name','')
+        
+        # Error codes if missing data
+        
+        if groupname == '':
+            response['code'] = 52
+            response['text'] = "Group name not provided"
+            return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+       
+        # Delete group with permissions
+       
+        try:
+            # Group.objects.filter(name=groupname).delete()
+            objgroup = Group.objects.get(name=groupname)
+            db_objid = objgroup.id
+            AuthPermission.objects.filter(objid=db_objid).delete()
+            Group.objects.filter(id=db_objid).delete()
+            # objgroup.delete()
+        except:
+            # Can't delete group
+            
+            response['code'] = 57
+            response['text'] = "Can't delete group"
+            return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+
+        # Build response
+
+        response['code'] = 1
+        response['text'] = "Group deleted"
+        return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+        
+@HttpOptionsDecorator
+@VoolksAPIAuthRequired
+def reset_password(request):
+    ''' Recovery user '''
+
+    response = {}        
+    
+    (app, key) = get_api_credentials(request)
+    
+    username = request.GET.get('username','')
+    
+    # Error codes if missing data
+
+    if username == '':
+        response['code'] = 56
+        response['text'] = "Username not provided"
+        return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+        
+    try:
+        userExists = User.objects.get(username=app + "-" + key + "-" + username)
+    except:
+        response['code'] = 57
+        response['text'] = "Username not exists"
+        return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+    
+    # Build response
+    
+    randompassword = ''.join([random.choice(string.letters + string.digits) for i in range(8)])    
+    newpassword = md5.new(str(RESET_SECRET_KEY + randompassword + username)).hexdigest()
+    userExists.set_password(newpassword)
+    userExists.save()
+    
+    response['newpassword'] = newpassword
+    return HttpResponse(json.dumps(response) + "\n", content_type="application/json") 
+    
+@HttpOptionsDecorator
+@VoolksAPIAuthRequired
+def change_password(request):
+    ''' Change password user '''
+
+    response = {}        
+    
+    (app, key) = get_api_credentials(request)
+    
+    username = request.GET.get('username','')
+    password = request.GET.get('password','')
+    newpassword = request.GET.get('newpassword','')
+    
+    # Error codes if missing data
+
+    if username == '':
+        response['code'] = 56
+        response['text'] = "Username not provided"
+        return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+
+    elif password == '':
+        response['code'] = 58
+        response['text'] = "Password not provided"
+        return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+    
+    elif newpassword == '':
+        response['code'] = 59
+        response['text'] = "New password not provided"
+        return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+    
+    else:
+        
+        try:
+            userExists = User.objects.get(username=app + "-" + key + "-" + username)
+        except:
+            response['code'] = 57
+            response['text'] = "Username not exists"
+            return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
+            
+        userExists.set_password(newpassword)
+        userExists.save()
+        
+        response['newpassword'] = newpassword
+        return HttpResponse(json.dumps(response) + "\n", content_type="application/json") 
+        
