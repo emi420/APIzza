@@ -1,0 +1,5 @@
+Django==1.6.2
+pymongo==2.6.3
+requests==2.3.0
+wsgiref==0.1.2
+python-gcm
