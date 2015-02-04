@@ -136,7 +136,22 @@ class DataApiTestCase(unittest.TestCase):
         self.tmp_test_data["id_created_2"] = responseObj["id"]
         #self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
         self.assertTrue("id" in responseObj)
-        
+    
+    # Test creation of class on db...
+    def test_0013_create(self):
+        self.log.debug("I want to create an object with permission")
+        #headers = {"content-type": "application/json", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key,"X-Voolks-Session-Id": self.tmp_test_data["session_sessionid"] }
+        url = self.data_api_url + "classes/testclass/"
+        data = {"name": "manzana", "_permissions": { self.tmp_test_data["session_userid"]: { "read": "true", "write": "true" }, "*": { "read": "true", "write": "false" } }}
+        params = {}
+        ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
+        # self.log.debug("Raw response from api: " + ret.text)
+        responseObj =  json.loads(ret.text)
+        self.tmp_test_data["id_created"] = responseObj["id"]
+        #self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
+        self.assertTrue("id" in responseObj)
+    
     # Test for getting data from db...
     def test_002_get(self):
         self.log.debug("I want to get an object")
@@ -194,7 +209,8 @@ class DataApiTestCase(unittest.TestCase):
         self.log.debug("I want to filter all objects using a where parameter (ids)")
         url = self.data_api_url + "classes/testclass/?where=" + """{"_id":{"""+'"$in"'+""":["""+'"'+self.tmp_test_data["id_created"]+'"'+""","""+'"'+self.tmp_test_data["id_created_2"]+'"'+"""]}}"""
         ret = requests.get(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
-        # self.log.debug("Raw response from api: " + ret.text)
+        #self.log.debug("URL to filter by ids: " + url)
+        #self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("testNumber" in responseObj["result"][0])   

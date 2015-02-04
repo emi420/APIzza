@@ -82,6 +82,28 @@ def classes(request, class_name):
         obj = instance.insert(parsed_data)
         response['id'] = str(obj)
         
+        if "_permissions" in parsed_data:
+            
+            session = validate_session(sessionid, app, key)
+            if not "userid" in session:
+                return HttpResponse(json.dumps({"error":"Invalid session","code":"53"}) + "\n", content_type="application/json")
+            else:
+                userid = str(session['userid'])
+                db_objid = ""
+                db_user = ""
+                db_user_permissions = ""
+                db_other_permissions = ""
+                # for user in parsed_data['_permissions'].iterkeys():
+                    # if user == "*":
+                        # db_other_permissions = json.dumps(parsed_data['_permissions'][user])
+                    # else:
+                        # db_user = user
+                        # db_user_permissions = json.dumps(parsed_data['_permissions'][user])
+                db_objid = str(obj)
+                data_permissions = parsed_data['_permissions']
+                
+                create_response = create_object_permissions(sessionid, app, key, db_objid, data_permissions)
+                
     else:
 
         # Get data
@@ -210,7 +232,20 @@ def validate_session(sessionid, app, key):
     response = json.loads(res.text)
     return response
 
+def create_object_permissions(sessionid, app, key, obj_id, data_permissions):
+    ''' Create object permissions using an external API (auth.api)'''
 
+    import requests    
+    headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-Session-Id": sessionid, "X-Voolks-App-Id": app, "X-Voolks-Api-Key": key }
+    url = USER_SESSION_URL + "permissions/"
+    data = { obj_id: data_permissions}
+    params = {}
+    res = requests.post(url, params=params, data=json.dumps(data), headers=headers)
+    
+    response = json.loads(res.text)
+    return response
+    
+    
 def get_object_permissions(sessionid, app, key, obj_id):
     ''' Check if object have specific permissions using an external API (auth.api)'''
 
