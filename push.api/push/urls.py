@@ -3,8 +3,9 @@ import settings
 
 urlpatterns = patterns('',
     url(r'^installations/$', 'push.views.installations'),
-    url(r'^installations/(.*)/$', 'push.views.install_get_one'),
-    url(r'^push/$', 'push.views.push')
+    url(r'^delete/$', 'push.views.delete'),
+    url(r'^push/$', 'push.views.push'),
+    url(r'^push/(.*)/$', 'push.views.push_one'),
 )
 
 
