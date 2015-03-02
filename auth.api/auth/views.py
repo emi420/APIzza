@@ -572,6 +572,11 @@ def change_password(request):
         
         try:
             userExists = User.objects.get(username=app + "-" + key + "-" + username)
+            tmp = authenticate(username=app + "-" + key + "-" + username, password=password)
+            if tmp is None:
+                response['code'] = 60
+                response['text'] = "Invalid password"
+                return HttpResponse(json.dumps(response) + "\n", content_type="application/json")
         except:
             response['code'] = 57
             response['text'] = "Username not exists"
