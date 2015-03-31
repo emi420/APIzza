@@ -89,26 +89,26 @@ class PushApiTestCase(unittest.TestCase):
         self.log.debug("I want to filter installations send push notification")
         headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
         url = self.push_api_url + "push/"
-        data = {"where": {"deviceType": "android"}, "data": {"alert": "Message"}}
+        data = {"where": {"deviceType": "android"}, "data": {"message": "New Message from API by Filter"}}
         params = {}
         ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
         self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
-        self.assertTrue("id" in responseObj)        
+        self.assertTrue("code" in responseObj and responseObj["code"] == 1)         
         
     # Test to one send push notifications...
     def test_004_push_one(self):
         self.log.debug("I want to send one push notification")
         headers = {"Content-Type": "application/x-www-form-urlencoded", "X-Voolks-App-Id": self.app_id, "X-Voolks-Api-Key": self.app_key }
         url = self.push_api_url + "push/"+ self.tmp_test_data["id_created1"] + "/"
-        data = {"data": {"alert": "Message"}}
+        data = {"data": {"message": "New Message from API by one"}}
         params = {}
         ret = requests.post(url, params=params, data=json.dumps(data), headers=headers)
         self.log.debug("Raw response from api: " + ret.text)
         responseObj =  json.loads(ret.text)
         #self.log.debug("Parsed id for testing: " + self.tmp_test_data["id_created"])
-        self.assertTrue("id" in responseObj)       
+        self.assertTrue("code" in responseObj and responseObj["code"] == 1)       
         
     # Test for deleting an installation
     def test_995_delete(self):
@@ -120,14 +120,5 @@ class PushApiTestCase(unittest.TestCase):
         #self.log.debug("Response from api: " + json.dumps(responseObj))
         self.assertTrue("code" in responseObj and responseObj["code"] == 1)      
         
-    # Test for deleting an installation
-    def test_996_delete(self):
-        self.log.debug("I want to delete an installation")
-        url = self.push_api_url + "delete/?objid=" + self.tmp_test_data["id_created2"] + ""
-        ret = requests.delete(url, headers={'X-Voolks-App-Id': self.app_id, 'X-Voolks-Api-Key': self.app_key}, verify=False)
-        self.log.debug("Raw response from api: " + ret.text)
-        responseObj =  json.loads(ret.text)
-        #self.log.debug("Response from api: " + json.dumps(responseObj))
-        self.assertTrue("code" in responseObj and responseObj["code"] == 1) 
         
         
